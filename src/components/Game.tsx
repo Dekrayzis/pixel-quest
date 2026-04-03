@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useReducer, useState, useCallback } from 'react';
 import { VIEWPORT_W, VIEWPORT_H, TILE } from '../config/constants';
-import { LEVEL_W, UNDERGROUND_W } from '../data/level1';
+import { getActiveLevel } from '../data/activeLevel';
+import { setActiveLevelId } from '../data/activeLevel';
+import { LEVEL_ORDER } from '../data/levels';
 import useInput from '../hooks/useInput';
 import { tickGameState, createInitialState } from '../hooks/useGameState';
 
@@ -86,7 +88,21 @@ export default function Game(): React.ReactElement {
         if (s.gameStatus === 'start') {
           s.gameStatus = 'playing';
           forceRender();
-        } else if (s.gameStatus === 'won' || s.gameStatus === 'lost') {
+        } else if (s.gameStatus === 'won') {
+          // Advance to next level if available
+          const level = getActiveLevel();
+          const idx = LEVEL_ORDER.indexOf(level.id);
+          if (idx >= 0 && idx < LEVEL_ORDER.length - 1) {
+            setActiveLevelId(LEVEL_ORDER[idx + 1]);
+          } else {
+            // Loop back to first level after beating all
+            setActiveLevelId(LEVEL_ORDER[0]);
+          }
+          stateRef.current = createInitialState();
+          stateRef.current.gameStatus = 'playing';
+          forceRender();
+        } else if (s.gameStatus === 'lost') {
+          // Restart current level
           stateRef.current = createInitialState();
           stateRef.current.gameStatus = 'playing';
           forceRender();
@@ -98,7 +114,9 @@ export default function Game(): React.ReactElement {
   }, []);
 
   // ── Camera: follow player, clamped to level bounds (zone-aware) ──
-  const zoneLevelW = state.currentZone === 'underground' ? UNDERGROUND_W : LEVEL_W;
+  const activeLevel = getActiveLevel();
+  const currentZoneDef = activeLevel.zones[state.currentZone] ?? activeLevel.zones.overworld;
+  const zoneLevelW = (currentZoneDef.map[0]?.length ?? 0) * TILE;
   const cameraX = Math.max(
     0,
     Math.min(
@@ -106,7 +124,7 @@ export default function Game(): React.ReactElement {
       Math.max(0, zoneLevelW - VIEWPORT_W)
     )
   );
-  const isUnderground = state.currentZone === 'underground';
+  const isUnderground = currentZoneDef.kind === 'underground';
   const isWarping = state.warpState === 'transitioning';
 
   // Decorative background elements (clouds + hills, parallax)
@@ -179,7 +197,7 @@ export default function Game(): React.ReactElement {
         />
 
         {/* Coins (zone-aware) */}
-        {(isUnderground ? state.undergroundCoins : state.coins).map((coin: any) => {
+        {(state.coinsByZone?.[state.currentZone] ?? []).map((coin: any) => {
           if (coin.x < cameraX - TILE || coin.x > cameraX + VIEWPORT_W + TILE) return null;
           return <Coin key={coin.id} coin={coin} now={state.now} />;
         })}
@@ -229,6 +247,7 @@ export default function Game(): React.ReactElement {
         score={state.score}
         lives={state.lives}
         coinsCollected={state.coinsCollected}
+        worldLabel={activeLevel.displayName}
       />
 
       {/* Warp transition overlay */}
@@ -240,6 +259,8 @@ export default function Game(): React.ReactElement {
       <GameOverScreen
         status={state.gameStatus}
         score={state.score}
+        levelName={activeLevel.displayName}
+        hasNextLevel={LEVEL_ORDER.indexOf(activeLevel.id) < LEVEL_ORDER.length - 1}
       />
     </div>
     </div>

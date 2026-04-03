@@ -6,7 +6,7 @@ interface HUDSectionConfig {
   render: () => React.ReactNode;
 }
 
-const HUD = React.memo(function HUD({ score, lives, coinsCollected }: { score: number; lives: number; coinsCollected: number }): React.ReactElement {
+const HUD = React.memo(function HUD({ score, lives, coinsCollected, worldLabel }: { score: number; lives: number; coinsCollected: number; worldLabel?: string }): React.ReactElement {
   const sections: HUDSectionConfig[] = [
     { label: 'SCORE', render: () => String(score).padStart(6, '0') },
     { label: 'COINS', render: () => coinsCollected },
@@ -20,7 +20,7 @@ const HUD = React.memo(function HUD({ score, lives, coinsCollected }: { score: n
         </div>
       ),
     },
-    { label: 'WORLD', render: () => '1-1' },
+    { label: 'WORLD', render: () => worldLabel ?? '1-1' },
   ];
 
   return (

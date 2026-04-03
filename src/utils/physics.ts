@@ -1,8 +1,5 @@
 import { GRAVITY, MAX_FALL_SPEED, TILE } from '../config/constants';
-import {
-  MAP, LEVEL_COLS, LEVEL_ROWS,
-  UNDERGROUND_MAP, UNDERGROUND_COLS, UNDERGROUND_ROWS,
-} from '../data/level1';
+import { getActiveLevel } from '../data/activeLevel';
 
 export interface TileRect {
   x: number;
@@ -14,12 +11,12 @@ export interface TileRect {
   type: number;
 }
 
-/** Map data lookup by zone name */
+/** Map data lookup by zone name — uses the active level */
 function getZoneData(zone: string): { map: number[][]; cols: number; rows: number } {
-  if (zone === 'underground') {
-    return { map: UNDERGROUND_MAP, cols: UNDERGROUND_COLS, rows: UNDERGROUND_ROWS };
-  }
-  return { map: MAP, cols: LEVEL_COLS, rows: LEVEL_ROWS };
+  const level = getActiveLevel();
+  const zoneDef = level.zones[zone] ?? level.zones.overworld;
+  const map = zoneDef.map;
+  return { map, cols: map[0]?.length ?? 0, rows: map.length };
 }
 
 /**

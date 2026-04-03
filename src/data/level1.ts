@@ -1,4 +1,5 @@
 import { TILE } from '../config/constants';
+import type { LevelDefinition } from './levels';
 
 /**
  * Level 1 — "Emerald Plains"
@@ -135,20 +136,7 @@ export const UNDERGROUND_COINS = [
  * - exitCol, exitRow: the LEFT column of the 2-wide pipe-top the player emerges from
  * - exitPlayerX, exitPlayerY: pixel position where the player appears after emerging
  */
-export interface WarpPipe {
-  id: string;
-  entryZone: string;
-  entryCol: number;
-  entryRow: number;
-  exitZone: string;
-  exitCol: number;
-  exitRow: number;
-  exitPlayerX: number;
-  exitPlayerY: number;
-  emergeDirection: 'up' | 'down';
-}
-
-export const WARP_PIPES: WarpPipe[] = [
+export const WARP_PIPES = [
   {
     // Overworld pipe at col 14-15 → underground: drop from ceiling pipe at col 2-3
     id: 'warp-ow-to-ug',
@@ -160,7 +148,7 @@ export const WARP_PIPES: WarpPipe[] = [
     exitRow: 2,
     exitPlayerX: 2 * TILE,
     exitPlayerY: 3 * TILE,
-    emergeDirection: 'down',
+    emergeDirection: 'down' as const,
   },
   {
     // Underground exit pipe at col 14-15, row 5 → overworld emerge at 2nd pipe (col 28-29, row 7)
@@ -173,6 +161,31 @@ export const WARP_PIPES: WarpPipe[] = [
     exitRow: 7,
     exitPlayerX: 28 * TILE,
     exitPlayerY: 7 * TILE - 48,
-    emergeDirection: 'up',
+    emergeDirection: 'up' as const,
   },
 ];
+
+/** Wrapped LevelDefinition for the new multi-level system */
+export const LEVEL1: LevelDefinition = {
+  id: '1-1',
+  displayName: 'World 1-1',
+  playerStart: PLAYER_START,
+  flagPos: FLAG_POS,
+  zones: {
+    overworld: {
+      id: 'overworld',
+      kind: 'overworld',
+      map: MAP,
+      enemies: ENEMIES,
+      coins: COINS,
+    },
+    underground: {
+      id: 'underground',
+      kind: 'underground',
+      map: UNDERGROUND_MAP,
+      enemies: UNDERGROUND_ENEMIES,
+      coins: UNDERGROUND_COINS,
+    },
+  },
+  warpPipes: WARP_PIPES,
+};

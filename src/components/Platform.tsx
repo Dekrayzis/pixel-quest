@@ -1,9 +1,6 @@
 import React from 'react';
 import { TILE } from '../config/constants';
-import {
-  MAP, LEVEL_COLS, LEVEL_ROWS,
-  UNDERGROUND_MAP, UNDERGROUND_COLS, UNDERGROUND_ROWS,
-} from '../data/level1';
+import { getActiveLevel } from '../data/activeLevel';
 import '../styles/platform.scss';
 import '../styles/block.scss';
 
@@ -28,10 +25,11 @@ function Platform({
   cameraX,
   currentZone,
 }: PlatformProps): React.ReactElement {
-  const isUnderground = currentZone === 'underground';
-  const map = isUnderground ? UNDERGROUND_MAP : MAP;
-  const cols = isUnderground ? UNDERGROUND_COLS : LEVEL_COLS;
-  const rows = isUnderground ? UNDERGROUND_ROWS : LEVEL_ROWS;
+  const level = getActiveLevel();
+  const zoneDef = level.zones[currentZone] ?? level.zones.overworld;
+  const map = zoneDef.map;
+  const rows = map.length;
+  const cols = map[0]?.length ?? 0;
 
   // Only render tiles visible in viewport + buffer
   const startCol = Math.max(0, Math.floor(cameraX / TILE) - 2);
