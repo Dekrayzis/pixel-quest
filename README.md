@@ -1,6 +1,6 @@
 # Pixel Quest
 
-A Super Mario Bros-inspired platformer built with React and Vite. Pure CSS pixel art — no image assets or sprite sheets.
+A Super Mario Bros-inspired platformer built with React, TypeScript, and Vite. Pure CSS pixel art — no image assets or sprite sheets.
 
 
 ![Gameplay title screen](./screenshots/gameplay-1.png)
@@ -9,7 +9,8 @@ A Super Mario Bros-inspired platformer built with React and Vite. Pure CSS pixel
 
 | Key | Action |
 |-----|--------|
-| **←** / **→** /   **A** / **D** | Move left / right |
+| **←** / **→** / **A** / **D** | Move left / right |
+| **↓** / **S** | Crouch / Enter warp pipe |
 | **Space** / **↑** / **W** | Jump (press again mid-air for double jump) |
 | **F** | Shoot fireball (requires Fire Flower power-up) |
 | **Enter** | Start game / Restart after win or game over |
@@ -17,12 +18,13 @@ A Super Mario Bros-inspired platformer built with React and Vite. Pure CSS pixel
 ## 🕹️ Gameplay
 
 ### Objective
-Navigate through the level, collect coins, defeat enemies, and reach the flag pole at the end to win.
+Navigate through the level, collect coins, defeat enemies, and reach the flag pole at the end to win. Discover secret warp pipes to access hidden underground areas filled with bonus coins.
 
 ### Player Abilities
 - **Walking & Running** — Move through the level with arrow keys
 - **Jumping** — Press Space to jump; press again in mid-air for a **double jump**
 - **Fireballs** — When the Fire Flower power-up is active, press F to shoot bouncing fireballs that defeat enemies on contact
+- **Warp Pipes** — Stand on certain pipes and press **Down** to travel to secret underground areas
 
 ### Blocks
 | Type | Description |
@@ -32,7 +34,7 @@ Navigate through the level, collect coins, defeat enemies, and reach the flag po
 | **? Blocks** | Hit from below to reveal coins or power-ups |
 | **Multi-coin Blocks** | Dispense 5 coins on repeated hits, then shatter |
 | **Solid Blocks** | Blue indestructible blocks |
-| **Pipes** | Green pipes — solid obstacles to jump over |
+| **Pipes** | Green pipes — some are warp pipes leading to secret areas |
 
 ### Power-ups
 | Power-up | Effect |
@@ -45,6 +47,9 @@ Navigate through the level, collect coins, defeat enemies, and reach the flag po
 |-------|----------|
 | **Goomba** | Walks back and forth on the ground. Defeat by jumping on top or with a fireball |
 | **Flyer** | Bobs up and down in the air. Defeat by jumping on top or with a fireball |
+
+### Warp Pipes
+Certain pipes in the level are warp pipes. Stand on top of them and press **Down** to enter. You'll be transported to a secret underground area with bonus coins and enemies. Find the exit pipe in the underground to return to the overworld further ahead in the level.
 
 ### Scoring
 | Action | Points |
@@ -60,6 +65,7 @@ When Mario reaches the flag pole, he grabs on and slides down with the flag. Aft
 ## 🏗️ Tech Stack
 
 - **React 18** — Component-based UI
+- **TypeScript** — Full type safety across the codebase
 - **Vite** — Fast dev server and build tool
 - **SCSS** — Styling with variables, mixins, and nesting
 - **Pure CSS pixel art** — All characters, enemies, and objects are rendered with CSS (no images)
@@ -70,17 +76,16 @@ When Mario reaches the flag pole, he grabs on and slides down with the flag. Aft
 src/
 ├── components/       # React components (Game, Player, Enemy, Coin, etc.)
 ├── config/
-│   └── constants.js  # Central game tuning (physics, sizes, timing)
+│   └── constants.ts  # Central game tuning (physics, sizes, timing)
 ├── data/
-│   └── level1.js     # Level map, enemy/coin spawns, flag position
+│   └── level1.ts     # Level maps (overworld + underground), enemy/coin spawns, warp pipes
 ├── hooks/
-│   ├── useGameState.js  # Core game logic (physics, collisions, state)
-│   ├── useGameLoop.js   # requestAnimationFrame loop
-│   └── useInput.js      # Keyboard input handling
+│   ├── useGameState.ts  # Core game logic (physics, collisions, zone management)
+│   └── useInput.ts      # Keyboard input handling
 ├── styles/           # SCSS files for all components
 └── utils/
-    ├── collision.js  # AABB overlap & penetration helpers
-    └── physics.js    # Tile lookups & solid tile checks
+    ├── collision.ts  # AABB overlap & penetration helpers
+    └── physics.ts    # Zone-aware tile lookups & solid tile checks
 ```
 
 ## 🚀 Getting Started
@@ -101,7 +106,7 @@ npm run preview
 
 ## 📐 Game Constants
 
-Key values can be tuned in `src/config/constants.js`:
+Key values can be tuned in `src/config/constants.ts`:
 
 - **Viewport**: 960×576px (responsive scaling on smaller screens)
 - **Tile size**: 48×48px
