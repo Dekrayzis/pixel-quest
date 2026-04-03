@@ -46,7 +46,7 @@ Navigate through the level, collect coins, defeat enemies, and reach the flag po
 | Enemy | Behavior |
 |-------|----------|
 | **Goomba** | Walks back and forth on the ground. Defeat by jumping on top or with a fireball |
-| **Flyer** | Bobs up and down in the air. Defeat by jumping on top or with a fireball |
+| **Flyer** | Moves around, bobbing up and down in the air. Defeat by jumping on top or with a fireball |
 | **Turtle** | Patrols the ground. Jump on it to turn it into a fast-sliding shell. The shell rebounds off walls up to 3 times and destroys any enemies it hits. A sliding shell damages the player on contact. Jump on the sliding shell to destroy it. Fireballs also convert turtles into shells |
 
 ### Warp Pipes
