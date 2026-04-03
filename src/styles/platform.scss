@@ -1,0 +1,168 @@
+.tile {
+  @include absolute-entity($z-tiles);
+  width: $tile;
+  height: $tile;
+
+  // ── Ground tile ─────────────────────────────────
+  &--ground {
+    background: $ground-brown;
+    @include pixel-border($ground-light, $ground-dark);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 8px;
+      background: #5a9c4f;
+      border-bottom: 2px solid #3d7a2e;
+    }
+  }
+
+  // ── Brick tile ──────────────────────────────────
+  &--brick {
+    background: $brick-red;
+    @include pixel-border($brick-highlight, $brick-dark, 2px);
+
+    // Mortar lines
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: $brick-dark;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 50%;
+      background: $brick-dark;
+    }
+  }
+
+  &--brick-breaking {
+    background: transparent;
+    border: none;
+    overflow: visible;
+    pointer-events: none;
+
+    .brick-fragment {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: $brick-red;
+      border-radius: 2px;
+      animation: brick-fragment 0.5s ease-out forwards;
+
+      &--tl { --frag-x: -20px; --frag-y: -50px; top: 0; left: 0; }
+      &--tr { --frag-x: 20px;  --frag-y: -50px; top: 0; right: 0; }
+      &--bl { --frag-x: -20px; --frag-y: -20px; bottom: 0; left: 0; }
+      &--br { --frag-x: 20px;  --frag-y: -20px; bottom: 0; right: 0; }
+    }
+  }
+
+  // ── Item block ──────────────────────────────────
+  &--item {
+    background: $item-yellow;
+    @include pixel-border(lighten($item-yellow, 15%), $item-dark, 3px);
+    @include flex-center;
+
+    .tile__question {
+      font-size: 22px;
+      font-weight: bold;
+      color: $item-dark;
+      animation: question-bob 0.8s ease-in-out infinite;
+      font-family: $font-game;
+      user-select: none;
+    }
+  }
+
+  &--item-used {
+    background: darken($item-yellow, 25%);
+    @include pixel-border(darken($item-yellow, 15%), darken($item-yellow, 35%), 3px);
+
+    .tile__question {
+      display: none;
+    }
+  }
+
+  &--item-bumped {
+    animation: block-bump 0.2s ease-out;
+  }
+
+  // ── Fire flower item block (orange tint) ────────
+  &--item-fire {
+    background: #e85d00;
+    @include pixel-border(lighten(#e85d00, 15%), darken(#e85d00, 15%), 3px);
+
+    .tile__question {
+      color: #fff;
+      text-shadow: 0 0 4px rgba(255, 100, 0, 0.8);
+    }
+  }
+
+  // ── Solid block ─────────────────────────────────
+  &--solid {
+    background: $solid-blue;
+    @include pixel-border(lighten($solid-blue, 15%), $solid-dark, 2px);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: calc(100% - 8px);
+      height: calc(100% - 8px);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+    }
+  }
+
+  // ── Pipe body (green shaft) ────────────────────
+  &--pipe-body {
+    background: linear-gradient(90deg, #1a8a1a 0%, #2ecc2e 30%, #3de03d 50%, #2ecc2e 70%, #1a8a1a 100%);
+    border-left: 3px solid #0d6b0d;
+    border-right: 3px solid #0d6b0d;
+  }
+
+  // ── Pipe top (wider green rim) ─────────────────
+  &--pipe-top {
+    background: linear-gradient(90deg, #1a8a1a 0%, #2ecc2e 30%, #3de03d 50%, #2ecc2e 70%, #1a8a1a 100%);
+    border: 3px solid #0d6b0d;
+    border-bottom: none;
+
+    // Lip overhang on left and right
+    &::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: -6px;
+      right: -6px;
+      height: $tile;
+      background: linear-gradient(90deg, #0d6b0d 0%, #1a8a1a 8%, #2ecc2e 30%, #3de03d 50%, #2ecc2e 70%, #1a8a1a 92%, #0d6b0d 100%);
+      border: 3px solid #0d6b0d;
+      border-radius: 4px 4px 0 0;
+      z-index: 1;
+    }
+
+    // Highlight stripe
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: calc(50% - 2px);
+      width: 6px;
+      height: calc(100% - 4px);
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      z-index: 2;
+    }
+  }
+}

@@ -1,0 +1,127 @@
+.powerup {
+  @include absolute-entity($z-powerup);
+  width: 40px;
+  height: 40px;
+
+  &--emerging {
+    animation: powerup-emerge 0.6s ease-out forwards;
+  }
+
+  &--active {
+    animation: powerup-bob 1s ease-in-out infinite;
+  }
+
+  &__body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__cap {
+    position: absolute;
+    top: 0;
+    left: 2px;
+    width: 36px;
+    height: 22px;
+    background: $powerup-green;
+    border-radius: 50% 50% 30% 30%;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: $powerup-spot;
+      border-radius: 50%;
+      top: 4px;
+    }
+
+    &::before { left: 5px; }
+    &::after { right: 5px; }
+  }
+
+  &__stem {
+    position: absolute;
+    bottom: 0;
+    left: 6px;
+    width: 28px;
+    height: 18px;
+    background: $player-skin;
+    border-radius: 4px;
+
+    // Eyes
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      width: 6px;
+      height: 7px;
+      background: #333;
+      border-radius: 50%;
+    }
+
+    &::before { left: 5px; }
+    &::after  { right: 5px; }
+  }
+
+  &--collected {
+    animation: coin-collect 0.4s ease-out forwards;
+    pointer-events: none;
+  }
+
+  // ── Fire Flower variant ─────────────────────────
+  &__body--flower {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  &__petal {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ff4444;
+
+    &--1 { top: 2px;  left: 13px; } // top
+    &--2 { top: 13px; left: 24px; } // right
+    &--3 { top: 13px; left: 2px; }  // left
+    &--4 { top: 24px; left: 13px; } // bottom (behind center)
+  }
+
+  &__center {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background: #ffcc00;
+    border-radius: 50%;
+    border: 2px solid #e6a800;
+    z-index: 1;
+  }
+
+  &__stem--flower {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 14px;
+    background: #33aa33;
+    border-radius: 0 0 3px 3px;
+
+    // No eyes on stem for flower
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+
+  // Fire flower doesn't move — gentle pulse instead of bob
+  &--flower.powerup--active {
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+}

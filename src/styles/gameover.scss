@@ -1,0 +1,62 @@
+.game-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: $z-overlay;
+  @include flex-center;
+  flex-direction: column;
+  background: $overlay-dark;
+  animation: fade-in 0.5s ease-out;
+
+  &__title {
+    @include hud-text;
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  &__subtitle {
+    @include hud-text;
+    font-size: 20px;
+    color: $text-yellow;
+    margin-bottom: 8px;
+  }
+
+  &__score {
+    @include hud-text;
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  &__prompt {
+    @include hud-text;
+    font-size: 16px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  &--win .game-overlay__title {
+    color: $text-yellow;
+  }
+
+  &--lose .game-overlay__title {
+    color: $text-red;
+  }
+
+  &--start {
+    .game-overlay__title {
+      font-size: 52px;
+      color: $text-yellow;
+      margin-bottom: 4px;
+    }
+
+    .game-overlay__controls {
+      @include hud-text;
+      font-size: 12px;
+      margin-top: 16px;
+      text-align: center;
+      line-height: 1.8;
+      opacity: 0.8;
+    }
+  }
+}

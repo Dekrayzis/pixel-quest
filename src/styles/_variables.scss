@@ -1,0 +1,76 @@
+// ── Colors ──────────────────────────────────────────
+$sky-blue: #5c94fc;
+$sky-gradient-top: #3a7bfd;
+$sky-gradient-bottom: #87ceeb;
+
+$ground-brown: #8b5e3c;
+$ground-dark: #6b3f1f;
+$ground-light: #c49a6c;
+
+$brick-red: #c84c09;
+$brick-dark: #a03000;
+$brick-highlight: #e8782c;
+
+$item-yellow: #f5c842;
+$item-dark: #d4a017;
+$item-question: #fff;
+
+$solid-blue: #6b8cff;
+$solid-dark: #4060c0;
+
+$coin-gold: #ffd700;
+$coin-shadow: #cc9900;
+
+$player-red: #e63946;
+$player-skin: #fdd9b5;
+$player-blue: #2563eb;
+$player-dark: #1d3557;
+
+$enemy-brown: #8b4513;
+$enemy-dark: #5a2d0c;
+$enemy-eye: #fff;
+
+$flyer-purple: #9b59b6;
+$flyer-dark: #6c3483;
+$flyer-wing: #d4a8e8;
+
+$powerup-green: #2ecc71;
+$powerup-dark: #1a9c4e;
+$powerup-spot: #fff;
+
+$projectile-orange: #ff6b35;
+$projectile-glow: #ffa07a;
+
+$flag-green: #27ae60;
+$flag-pole-gray: #bbb;
+$flag-ball-gold: #ffd700;
+
+$hud-white: #fff;
+$hud-shadow: rgba(0, 0, 0, 0.5);
+
+$overlay-dark: rgba(0, 0, 0, 0.75);
+$text-white: #fff;
+$text-yellow: #f5c842;
+$text-red: #e63946;
+
+// ── Spacing / Sizing ────────────────────────────────
+$tile: 48px;
+$viewport-w: 960px;
+$viewport-h: 576px;
+$hud-height: 48px;
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+
+// ── Z-indexes ───────────────────────────────────────
+$z-bg: 0;
+$z-tiles: 1;
+$z-collectible: 2;
+$z-enemy: 3;
+$z-projectile: 4;
+$z-player: 5;
+$z-powerup: 6;
+$z-hud: 10;
+$z-overlay: 20;
+
+// ── Font ────────────────────────────────────────────
+$font-game: 'Courier New', Courier, monospace;

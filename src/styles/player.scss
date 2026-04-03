@@ -1,0 +1,301 @@
+// ── Player: pixel-art Mario style ─────────────────
+.player {
+  @include absolute-entity($z-player);
+  width: 40px;
+  transition: none;
+
+  &__body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  // ── Cap (red, rounded top with flat brim) ────────
+  &__cap {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    width: 32px;
+    height: 14px;
+    background: $player-red;
+    border-radius: 10px 10px 0 0;
+    z-index: 3;
+
+    // Brim extends forward
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      width: 28px;
+      height: 6px;
+      background: $player-red;
+      border-radius: 0 4px 4px 0;
+    }
+  }
+
+  // ── Hair (brown, visible at sides and back) ──────
+  &__hair {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 10px;
+    height: 12px;
+    background: $player-dark;
+    border-radius: 0 0 3px 3px;
+    z-index: 1;
+
+    // Hair at the back of head
+    &::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 0;
+      width: 6px;
+      height: 8px;
+      background: $player-dark;
+      border-radius: 3px 0 0 3px;
+    }
+  }
+
+  // ── Face (skin-colored, large, with details) ─────
+  &__face {
+    position: absolute;
+    top: 14px;
+    left: 8px;
+    width: 30px;
+    height: 16px;
+    background: $player-skin;
+    border-radius: 2px 6px 6px 2px;
+    z-index: 2;
+  }
+
+  // ── Eye ──────────────────────────────────────────
+  &__eye {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    width: 5px;
+    height: 6px;
+    background: #222;
+    border-radius: 2px;
+  }
+
+  // ── Nose (prominent, skin-tone bump) ─────────────
+  &__nose {
+    position: absolute;
+    top: 6px;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background: darken($player-skin, 8%);
+    border-radius: 0 50% 50% 0;
+    z-index: 3;
+  }
+
+  // ── Sideburn (brown, below cap at the back) ──────
+  &__sideburn {
+    position: absolute;
+    bottom: -2px;
+    left: -6px;
+    width: 8px;
+    height: 6px;
+    background: $player-dark;
+    border-radius: 0 0 2px 2px;
+  }
+
+  // ── Shirt (red, visible at arms area) ────────────
+  &__shirt {
+    position: absolute;
+    top: 28px;
+    left: 4px;
+    width: 34px;
+    height: 8px;
+    background: $player-red;
+    border-radius: 2px;
+    z-index: 2;
+
+    // Arm (skin peeking out)
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -3px;
+      width: 8px;
+      height: 10px;
+      background: $player-skin;
+      border-radius: 4px 0 4px 4px;
+    }
+
+    // Arm on right side
+    &::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      right: -2px;
+      width: 6px;
+      height: 10px;
+      background: $player-red;
+      border-radius: 0 4px 4px 0;
+    }
+  }
+
+  // ── Overalls (blue, main body) ───────────────────
+  &__overalls {
+    position: absolute;
+    top: 34px;
+    left: 6px;
+    width: 28px;
+    height: 10px;
+    background: $player-blue;
+    border-radius: 2px;
+    z-index: 2;
+  }
+
+  // ── Button (white circle on overalls) ────────────
+  &__button {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    width: 5px;
+    height: 5px;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  // ── Shoes (brown) ────────────────────────────────
+  &__shoes {
+    position: absolute;
+    bottom: 0;
+    left: 2px;
+    width: 36px;
+    height: 8px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+
+    &::before,
+    &::after {
+      content: '';
+      width: 14px;
+      height: 8px;
+      background: #8B4513;
+      border-radius: 3px 3px 4px 4px;
+    }
+  }
+
+  // ── State modifiers ───────────────────────────────
+  &--idle .player__body {
+    animation: player-idle-breathe 1.5s ease-in-out infinite;
+  }
+
+  &--walking .player__body {
+    animation: player-walk 0.3s ease-in-out infinite;
+  }
+
+  &--jumping {
+    .player__shoes {
+      &::before { transform: rotate(-20deg) translateY(-2px); }
+      &::after  { transform: rotate(20deg) translateY(-2px); }
+    }
+  }
+
+  &--falling {
+    .player__shoes {
+      &::before { transform: rotate(10deg) translateY(2px); }
+      &::after  { transform: rotate(-10deg) translateY(2px); }
+    }
+  }
+
+  &--firing .player__shirt::after {
+    width: 12px;
+    background: $player-skin;
+    border-radius: 50%;
+  }
+
+  &--facing-left {
+    transform: scaleX(-1);
+  }
+
+  // ── Big (mushroom powered) ────────────────────────
+  &--big {
+    height: 80px;
+
+    .player__cap {
+      width: 34px;
+      height: 18px;
+      &::after { width: 30px; height: 7px; }
+    }
+    .player__hair {
+      top: 14px;
+      height: 14px;
+    }
+    .player__face {
+      top: 18px;
+      height: 22px;
+      width: 32px;
+    }
+    .player__nose {
+      width: 10px;
+      height: 10px;
+    }
+    .player__shirt {
+      top: 38px;
+      height: 12px;
+    }
+    .player__overalls {
+      top: 48px;
+      height: 18px;
+    }
+    .player__button {
+      width: 6px;
+      height: 6px;
+    }
+    .player__shoes {
+      height: 10px;
+      &::before,
+      &::after {
+        height: 10px;
+        width: 15px;
+      }
+    }
+  }
+
+  &--growing {
+    animation: player-grow 0.5s ease-in-out;
+  }
+
+  &--hurt {
+    animation: player-hurt 0.8s ease-in-out;
+  }
+
+  &--invincible {
+    animation: player-hurt 1.5s ease-in-out;
+  }
+
+  // ── Fire power mode (classic white + red swap) ────
+  &--fire {
+    .player__cap {
+      background: #fff;
+      &::after { background: #fff; }
+    }
+    .player__shirt {
+      background: #fff;
+      &::after { background: #fff; }
+    }
+    .player__overalls {
+      background: $player-red;
+    }
+    .player__shoes {
+      &::before,
+      &::after {
+        background: $player-red;
+      }
+    }
+  }
+
+  // Flash warning when fire power is about to expire
+  &--fire-expiring {
+    animation: fire-expire-flash 0.3s ease-in-out infinite;
+  }
+}

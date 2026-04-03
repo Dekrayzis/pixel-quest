@@ -1,0 +1,136 @@
+.enemy {
+  @include absolute-entity($z-enemy);
+  width: 44px;
+  height: 44px;
+
+  &__body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  // ── Goomba ────────────────────────────────────────
+  &--goomba {
+    .enemy__body {
+      animation: enemy-waddle 0.4s ease-in-out infinite;
+    }
+
+    .enemy__head {
+      position: absolute;
+      top: 0;
+      left: 2px;
+      width: 40px;
+      height: 28px;
+      background: $enemy-brown;
+      border-radius: 50% 50% 20% 20%;
+    }
+
+    .enemy__eyes {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 24px;
+      height: 12px;
+      display: flex;
+      justify-content: space-between;
+
+      &::before,
+      &::after {
+        content: '';
+        width: 10px;
+        height: 12px;
+        background: $enemy-eye;
+        border-radius: 50%;
+        border: 2px solid #333;
+      }
+    }
+
+    .enemy__feet {
+      position: absolute;
+      bottom: 0;
+      left: 4px;
+      width: 36px;
+      height: 14px;
+      background: $enemy-dark;
+      border-radius: 0 0 8px 8px;
+      display: flex;
+      justify-content: space-between;
+
+      &::before,
+      &::after {
+        content: '';
+        width: 14px;
+        height: 8px;
+        background: $enemy-dark;
+        border-radius: 0 0 6px 6px;
+        align-self: flex-end;
+      }
+    }
+  }
+
+  // ── Flyer ─────────────────────────────────────────
+  &--flyer {
+    .enemy__body-core {
+      position: absolute;
+      top: 8px;
+      left: 6px;
+      width: 32px;
+      height: 28px;
+      background: $flyer-purple;
+      border-radius: 50%;
+    }
+
+    .enemy__eyes {
+      position: absolute;
+      top: 14px;
+      left: 10px;
+      width: 24px;
+      height: 10px;
+      display: flex;
+      justify-content: space-between;
+
+      &::before,
+      &::after {
+        content: '';
+        width: 8px;
+        height: 10px;
+        background: $enemy-eye;
+        border-radius: 50%;
+        border: 2px solid $flyer-dark;
+      }
+    }
+
+    .enemy__wing {
+      position: absolute;
+      top: 4px;
+      width: 16px;
+      height: 20px;
+      background: $flyer-wing;
+      border-radius: 50% 50% 20% 20%;
+      animation: flyer-wing 0.25s ease-in-out infinite;
+
+      &--left {
+        left: -6px;
+        transform-origin: right center;
+      }
+
+      &--right {
+        right: -6px;
+        transform-origin: left center;
+      }
+    }
+  }
+
+  // ── Defeated state ────────────────────────────────
+  &--defeated {
+    pointer-events: none;
+
+    .enemy__body {
+      animation: enemy-squish 0.4s ease-out forwards;
+    }
+  }
+
+  &--facing-left {
+    transform: scaleX(-1);
+  }
+}

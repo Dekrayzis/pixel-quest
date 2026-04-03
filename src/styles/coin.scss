@@ -1,0 +1,35 @@
+.coin {
+  @include absolute-entity($z-collectible);
+  width: 24px;
+  height: 28px;
+  @include flex-center;
+
+  &__inner {
+    width: 20px;
+    height: 24px;
+    background: $coin-gold;
+    border-radius: 50%;
+    position: relative;
+    animation: coin-spin 1.5s ease-in-out infinite;
+    box-shadow: inset -3px -3px 0 $coin-shadow;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 6px;
+      width: 8px;
+      height: 14px;
+      background: $coin-shadow;
+      border-radius: 3px;
+    }
+  }
+
+  &--collected {
+    pointer-events: none;
+
+    .coin__inner {
+      animation: coin-collect 0.5s ease-out forwards;
+    }
+  }
+}

@@ -1,0 +1,35 @@
+// ── Position helpers ────────────────────────────────
+@mixin absolute-entity($z: $z-tiles) {
+  position: absolute;
+  z-index: $z;
+}
+
+@mixin pixel-box($w, $h, $bg) {
+  width: $w;
+  height: $h;
+  background: $bg;
+  image-rendering: pixelated;
+}
+
+// ── Retro pixel border (inset highlight + shadow) ───
+@mixin pixel-border($highlight, $shadow, $size: 3px) {
+  border-top: $size solid $highlight;
+  border-left: $size solid $highlight;
+  border-bottom: $size solid $shadow;
+  border-right: $size solid $shadow;
+}
+
+// ── Flex center ─────────────────────────────────────
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Text shadow for HUD ─────────────────────────────
+@mixin hud-text {
+  font-family: $font-game;
+  font-weight: bold;
+  color: $hud-white;
+  text-shadow: 2px 2px 0 $hud-shadow;
+}

@@ -1,0 +1,44 @@
+.hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: $hud-height;
+  z-index: $z-hud;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+  pointer-events: none;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__label {
+    @include hud-text;
+    font-size: 10px;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+
+  &__value {
+    @include hud-text;
+    font-size: 16px;
+  }
+
+  &__lives {
+    display: flex;
+    gap: 4px;
+
+    .life-icon {
+      font-size: 18px;
+      line-height: 1;
+      color: #e02020;
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
+  }
+}

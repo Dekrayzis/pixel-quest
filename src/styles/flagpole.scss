@@ -1,0 +1,52 @@
+.flagpole {
+  @include absolute-entity($z-collectible);
+
+  &__pole {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 288px;
+    background: linear-gradient(90deg, #999, $flag-pole-gray, #999);
+    border-radius: 4px 4px 0 0;
+  }
+
+  &__ball {
+    position: absolute;
+    bottom: 288px; // sits directly on top of the pole
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle at 35% 35%, lighten($flag-ball-gold, 20%), $flag-ball-gold);
+    border-radius: 50%;
+  }
+
+  &__flag {
+    position: absolute;
+    left: calc(50% + 4px);
+    width: 40px;
+    height: 32px;
+    background: $flag-green;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    transform-origin: left center;
+
+    // Waving animation only when not sliding
+    &--waving {
+      animation: flag-wave 1s ease-in-out infinite;
+    }
+  }
+
+  // Base block
+  &__base {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: $tile;
+    height: $tile;
+    background: $solid-blue;
+    @include pixel-border(lighten($solid-blue, 15%), $solid-dark, 2px);
+  }
+}
