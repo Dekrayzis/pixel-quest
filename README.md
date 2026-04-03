@@ -3,6 +3,7 @@
 A Super Mario Bros-inspired platformer built with React and Vite. Pure CSS pixel art — no image assets or sprite sheets.
 
 
+![Gameplay title screen](./screenshots/gameplay-1.png)
 
 ## 🎮 Controls
 
@@ -117,7 +118,9 @@ The game automatically scales down to fit smaller screens while maintaining the 
 
 ## 🖼️ Screenshots
 
-![Gameplay screenshot showing platforming and enemies](./screenshots/gameplay-1.png)
+![Gameplay screenshot showing platforming and enemies](./screenshots/gameplay-3.png)
 ![Gameplay screenshot showing coin collection](./screenshots/gameplay-2.png)
-![Gameplay screenshot showing fireball combat](./screenshots/gameplay-3.png)
+![Gameplay screenshot showing fireball combat](./screenshots/gameplay-5.png)
 ![Gameplay screenshot showing flag pole win sequence](./screenshots/gameplay-4.png)
+
+https://www.awesomescreenshot.com/image/59607214?key=1aaa508e3eb71a6b8b411b730c9df414
