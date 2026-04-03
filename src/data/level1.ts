@@ -90,11 +90,11 @@ export const FLAG_POS = { x: 76.08 * TILE - 10, y: 4 * TILE };
 export const UNDERGROUND_MAP: number[][] = [
 // 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19
   [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // ceiling
+  [5, 0, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5], // entry pipe body from ceiling
+  [5, 0, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5], // entry pipe top (bottom of pipe)
   [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
   [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
-  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
-  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
-  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 0, 0, 0, 5], // brick/coin row + exit pipe top
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 0, 0, 0, 5], // exit pipe top
   [5, 0, 0, 2, 3, 2, 3, 2, 3, 2, 0, 0, 0, 0, 7, 7, 0, 0, 0, 5],
   [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 0, 0, 0, 5],
   [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 7, 7, 0, 0, 0, 5], // step to reach pipe
@@ -107,6 +107,11 @@ export const UNDERGROUND_COLS = UNDERGROUND_MAP[0].length;
 export const UNDERGROUND_ROWS = UNDERGROUND_MAP.length;
 export const UNDERGROUND_W = UNDERGROUND_COLS * TILE;
 export const UNDERGROUND_H = UNDERGROUND_ROWS * TILE;
+
+// Enemies in the underground area
+export const UNDERGROUND_ENEMIES = [
+  { type: 'flyer' as const, x: 8 * TILE, y: 3 * TILE },
+];
 
 // Coins in the underground area
 export const UNDERGROUND_COINS = [
@@ -137,20 +142,22 @@ export interface WarpPipe {
   exitRow: number;
   exitPlayerX: number;
   exitPlayerY: number;
+  emergeDirection: 'up' | 'down';
 }
 
 export const WARP_PIPES: WarpPipe[] = [
   {
-    // Overworld pipe at col 14-15 → underground spawn
+    // Overworld pipe at col 14-15 → underground: drop from ceiling pipe at col 2-3
     id: 'warp-ow-to-ug',
     entryZone: 'overworld',
     entryCol: 14,
     entryRow: 8,
     exitZone: 'underground',
-    exitCol: 16,    // irrelevant for entry, used for emerge reference
-    exitRow: 5,
+    exitCol: 2,
+    exitRow: 2,
     exitPlayerX: 2 * TILE,
-    exitPlayerY: 9 * TILE - 48,
+    exitPlayerY: 3 * TILE,
+    emergeDirection: 'down',
   },
   {
     // Underground exit pipe at col 14-15, row 5 → overworld emerge at 2nd pipe (col 28-29, row 7)
@@ -163,5 +170,6 @@ export const WARP_PIPES: WarpPipe[] = [
     exitRow: 7,
     exitPlayerX: 28 * TILE,
     exitPlayerY: 7 * TILE - 48,
+    emergeDirection: 'up',
   },
 ];

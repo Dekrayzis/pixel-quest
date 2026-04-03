@@ -7,7 +7,7 @@ import {
 import {
   MAP, LEVEL_W, LEVEL_H, LEVEL_COLS, LEVEL_ROWS,
   UNDERGROUND_MAP, UNDERGROUND_W, UNDERGROUND_H, UNDERGROUND_COLS, UNDERGROUND_ROWS,
-  UNDERGROUND_COINS, WARP_PIPES,
+  UNDERGROUND_ENEMIES, UNDERGROUND_COINS, WARP_PIPES,
   PLAYER_START, ENEMIES as ENEMY_SPAWNS,
   COINS as COIN_SPAWNS, FLAG_POS,
 } from '../data/level1';
@@ -51,6 +51,7 @@ export function createInitialState(): any {
       defeatedAt: 0,
       originY: e.y,
       phase: Math.random() * Math.PI * 2, // for flyer bob
+      zone: 'overworld',
     })),
     coins: COIN_SPAWNS.map((c, i) => ({
       id: `coin-${i}`,
@@ -443,6 +444,7 @@ function updateProjectiles(s: any, now: number, zone = 'overworld'): void {
 function updateEnemies(s: any, now: number, zone = 'overworld'): void {
   for (const enemy of s.enemies) {
     if (!enemy.alive) continue;
+    if ((enemy.zone || 'overworld') !== zone) continue;
 
     if (enemy.type === 'goomba') {
       // Patrol: walk left/right, reverse on wall or edge
@@ -517,12 +519,14 @@ function updateEnemies(s: any, now: number, zone = 'overworld'): void {
 
 function checkPlayerEnemyCollisions(s: any, now: number): void {
   const p = s.player;
+  const zone = s.currentZone;
 
   // Invincibility check
   if (p.invincibleUntil > now) return;
 
   for (const enemy of s.enemies) {
     if (!enemy.alive) continue;
+    if ((enemy.zone || 'overworld') !== zone) continue;
     if (!aabbOverlap(p, enemy)) continue;
 
     const pen = aabbPenetration(p, enemy);
@@ -819,12 +823,16 @@ function updateWarpSequence(s: any, now: number): void {
       // Switch to exit zone
       s.currentZone = warp.exitZone;
       p.x = warp.exitPlayerX;
-      // Start below the exit pipe (hidden) then rise up
-      p.y = warp.exitPlayerY + TILE * 1.5;
+      // Position player hidden inside the pipe, ready to emerge
+      if (warp.emergeDirection === 'down') {
+        p.y = warp.exitPlayerY - TILE * 1.5; // start above (hidden in ceiling pipe)
+      } else {
+        p.y = warp.exitPlayerY + TILE * 1.5; // start below (hidden in floor pipe)
+      }
       p.vx = 0;
       p.vy = 0;
 
-      // Initialize underground coins on first visit
+      // Initialize underground coins and enemies on first visit
       if (warp.exitZone === 'underground' && !s.undergroundVisited) {
         s.undergroundVisited = true;
         s.undergroundCoins = UNDERGROUND_COINS.map((c: any, i: number) => ({
@@ -836,16 +844,35 @@ function updateWarpSequence(s: any, now: number): void {
           collected: false,
           collectedAt: 0,
         }));
+        // Spawn underground enemies
+        const ugEnemies = UNDERGROUND_ENEMIES.map((e: any, i: number) => ({
+          id: `ug-enemy-${i}`,
+          type: e.type,
+          x: e.x,
+          y: e.y,
+          width: e.type === 'goomba' ? ENEMY.GOOMBA.WIDTH : ENEMY.FLYER.WIDTH,
+          height: e.type === 'goomba' ? ENEMY.GOOMBA.HEIGHT : ENEMY.FLYER.HEIGHT,
+          vx: e.type === 'goomba' ? -ENEMY.GOOMBA.SPEED : ENEMY.FLYER.SPEED,
+          vy: 0,
+          alive: true,
+          defeatedAt: 0,
+          originY: e.y,
+          phase: Math.random() * Math.PI * 2,
+          zone: 'underground',
+        }));
+        s.enemies.push(...ugEnemies);
       }
 
       s.warpState = 'emerging';
       s.warpStartTime = now;
     }
   } else if (s.warpState === 'emerging') {
-    // Player rises out of exit pipe
+    // Player emerges from exit pipe (direction-aware)
     const progress = Math.min(elapsed / WARP_EMERGE_DURATION, 1);
     const targetY = warp.exitPlayerY;
-    const startY = targetY + TILE * 1.5;
+    const startY = warp.emergeDirection === 'down'
+      ? targetY - TILE * 1.5  // dropping down from above
+      : targetY + TILE * 1.5; // rising up from below
     p.y = startY + (targetY - startY) * progress;
     p.vx = 0;
     p.vy = 0;
@@ -854,7 +881,7 @@ function updateWarpSequence(s: any, now: number): void {
     if (progress >= 1) {
       s.warpState = 'none';
       p.y = targetY;
-      p.onGround = true;
+      p.onGround = warp.emergeDirection === 'up';
     }
   }
 }

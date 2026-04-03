@@ -189,8 +189,8 @@ export default function Game(): React.ReactElement {
           return <PowerUp key={pu.id} powerup={pu} now={state.now} />;
         })}
 
-        {/* Enemies */}
-        {state.enemies.map((enemy: any) => {
+        {/* Enemies (zone-filtered) */}
+        {state.enemies.filter((e: any) => (e.zone || 'overworld') === state.currentZone).map((enemy: any) => {
           if (enemy.x < cameraX - TILE * 2 || enemy.x > cameraX + VIEWPORT_W + TILE * 2) return null;
           return <Enemy key={enemy.id} enemy={enemy} now={state.now} />;
         })}
