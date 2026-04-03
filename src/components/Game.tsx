@@ -209,7 +209,7 @@ export default function Game(): React.ReactElement {
         )}
 
         {/* Player */}
-        <Player player={state.player} now={state.now} />
+        <Player player={state.player} now={state.now} warping={state.warpState === 'sinking' || state.warpState === 'emerging'} />
 
         {/* Score/coin popups */}
         {state.popups.map((pop: any) => (

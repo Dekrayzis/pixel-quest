@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/player.scss';
 
-function Player({ player, now }: { player: any; now: number }): React.ReactElement {
+function Player({ player, now, warping = false }: { player: any; now: number; warping?: boolean }): React.ReactElement {
   const {
     x, y, width, height, facing, big, state,
     invincibleUntil, growingUntil, firePowerUntil,
@@ -21,6 +21,7 @@ function Player({ player, now }: { player: any; now: number }): React.ReactEleme
     isInvincible ? 'player--invincible' : '',
     hasFirePower ? 'player--fire' : '',
     fireExpiring ? 'player--fire-expiring' : '',
+    warping ? 'player--warping' : '',
   ].filter(Boolean).join(' ');
 
   return (
