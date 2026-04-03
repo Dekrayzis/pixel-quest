@@ -154,12 +154,13 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   // Jump — ground jump + double jump in air
   if (consumeJustPressed('jump')) {
     if (p.onGround) {
-      p.vy = PLAYER.JUMP_FORCE;
+      p.vy = p.big ? PLAYER.JUMP_FORCE : PLAYER.JUMP_FORCE * 0.85; // small Mario jumps lower
       p.onGround = false;
       p.doubleJumpUsed = false;
       p.jumpStartTime = now;
     } else if (!p.doubleJumpUsed && now - (p.jumpStartTime || 0) > 150) {
-      p.vy = PLAYER.DOUBLE_JUMP_FORCE;
+      p.vy = p.big ? PLAYER.DOUBLE_JUMP_FORCE : PLAYER.DOUBLE_JUMP_FORCE * 0.85;
+      p.vx *= 0.5; // reduce horizontal control mid-air
       p.doubleJumpUsed = true;
     }
   }

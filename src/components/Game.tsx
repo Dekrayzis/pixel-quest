@@ -123,13 +123,14 @@ export default function Game(): React.ReactElement {
         />
       );
     }
-    for (let i = 0; i < 16; i++) {
-      const mod = i % 2 === 0 ? '1' : '2';
+    for (let i = 0; i < 20; i++) {
+      const mod = (i % 3) + 1; // cycles 1, 2, 3
+      const spacing = mod === 1 ? 280 : mod === 2 ? 200 : 240;
       hills.push(
         <div
           key={`hill-${i}`}
           className={`bg-hill bg-hill--${mod}`}
-          style={{ left: i * 260 + 30 }}
+          style={{ left: i * spacing + (mod === 2 ? 80 : 20) }}
         />
       );
     }
@@ -161,7 +162,7 @@ export default function Game(): React.ReactElement {
       >
         {/* Background decorations (parallax at 0.3x) — hidden underground */}
         {!isUnderground && (
-          <div style={{ transform: `translateX(${cameraX * 0.7}px)` }}>
+          <div style={{ transform: `translateX(${cameraX * 0.7}px)`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
             {bgElements.clouds}
             {bgElements.hills}
           </div>

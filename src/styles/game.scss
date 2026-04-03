@@ -96,22 +96,29 @@
   }
 }
 
-// Hills in background
+// Hills in background — base hidden behind ground tiles (z-bg < z-tiles)
 .bg-hill {
   @include absolute-entity($z-bg);
   border-radius: 50% 50% 0 0;
   background: #4a8c3f;
-  bottom: $tile * 2;
+  bottom: $tile * 0.5; // base inside ground, tops peek above
   pointer-events: none;
+  opacity: 0.5;
 
   &--1 {
     width: 200px;
-    height: 80px;
+    height: 120px;
   }
 
   &--2 {
-    width: 140px;
-    height: 55px;
+    width: 110px;
+    height: 65px;
     background: #5a9c4f;
+  }
+
+  &--3 {
+    width: 160px;
+    height: 90px;
+    background: #52944a;
   }
 }
