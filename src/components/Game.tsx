@@ -2,18 +2,17 @@ import React, { useEffect, useMemo, useRef, useReducer, useState, useCallback } 
 import { VIEWPORT_W, VIEWPORT_H, TILE } from '../config/constants';
 import { LEVEL_W } from '../data/level1';
 import useInput from '../hooks/useInput';
-import { tickGameState, createInitialState } from '../hooks/useGameState.ts';
-import { GameState } from '../types';
+import { tickGameState, createInitialState } from '../hooks/useGameState';
 
-import Player from './Player.tsx';
-import Enemy from './Enemy.tsx';
-import Platform from './Platform.tsx';
-import Coin from './Coin.tsx';
-import Projectile from './Projectile.tsx';
-import PowerUp from './PowerUp.tsx';
-import FlagPole from './FlagPole.tsx';
-import HUD from './HUD.tsx';
-import GameOverScreen from './GameOverScreen.tsx';
+import Player from './Player';
+import Enemy from './Enemy';
+import Platform from './Platform';
+import Coin from './Coin';
+import Projectile from './Projectile';
+import PowerUp from './PowerUp';
+import FlagPole from './FlagPole';
+import HUD from './HUD';
+import GameOverScreen from './GameOverScreen';
 
 import '../styles/game.scss';
 
@@ -24,7 +23,7 @@ import '../styles/game.scss';
  */
 export default function Game(): React.ReactElement {
   const { keys, consumeJustPressed } = useInput();
-  const stateRef = useRef<GameState>(createInitialState());
+  const stateRef = useRef(createInitialState());
   const [, forceRender] = useReducer((x: number) => x + 1, 0);
   const [scale, setScale] = useState(1);
 
@@ -173,25 +172,25 @@ export default function Game(): React.ReactElement {
         />
 
         {/* Coins */}
-        {state.coins.map((coin) => {
+        {state.coins.map((coin: any) => {
           if (coin.x < cameraX - TILE || coin.x > cameraX + VIEWPORT_W + TILE) return null;
           return <Coin key={coin.id} coin={coin} now={state.now} />;
         })}
 
         {/* Power-ups */}
-        {state.powerups.map((pu) => {
+        {state.powerups.map((pu: any) => {
           if (pu.x < cameraX - TILE * 2 || pu.x > cameraX + VIEWPORT_W + TILE * 2) return null;
           return <PowerUp key={pu.id} powerup={pu} now={state.now} />;
         })}
 
         {/* Enemies */}
-        {state.enemies.map((enemy) => {
+        {state.enemies.map((enemy: any) => {
           if (enemy.x < cameraX - TILE * 2 || enemy.x > cameraX + VIEWPORT_W + TILE * 2) return null;
           return <Enemy key={enemy.id} enemy={enemy} now={state.now} />;
         })}
 
         {/* Projectiles */}
-        {state.projectiles.map((proj) => (
+        {state.projectiles.map((proj: any) => (
           <Projectile key={proj.id} projectile={proj} />
         ))}
 
@@ -205,7 +204,7 @@ export default function Game(): React.ReactElement {
         <Player player={state.player} now={state.now} />
 
         {/* Score/coin popups */}
-        {state.popups.map((pop) => (
+        {state.popups.map((pop: any) => (
           <div
             key={pop.id}
             className={pop.type === 'coin' ? 'block-coin-popup' : 'score-popup'}

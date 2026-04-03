@@ -2,12 +2,7 @@ import React from 'react';
 import { FLAG_POS } from '../data/level1';
 import '../styles/flagpole.scss';
 
-interface FlagPoleProps {
-  flagReached: boolean;
-  flagSlideProgress: number;
-}
-
-function FlagPole({ flagReached, flagSlideProgress }: FlagPoleProps): React.ReactElement {
+const FlagPole = React.memo(function FlagPole({ flagReached, flagSlideProgress }: { flagReached: boolean; flagSlideProgress: number }): React.ReactElement {
   // Flag position driven by the same tick as the player (via flagSlideProgress)
   const FLAG_TOP = 48;   // starts below the gold ball at the top
   const FLAG_BOTTOM = 248; // bottom position (just above base)
@@ -31,6 +26,6 @@ function FlagPole({ flagReached, flagSlideProgress }: FlagPoleProps): React.Reac
       <div className="flagpole__base" />
     </div>
   );
-}
+});
 
 export default FlagPole;

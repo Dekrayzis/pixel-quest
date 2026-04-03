@@ -1,15 +1,8 @@
 import React from 'react';
-import { PowerUp as PowerUpType } from '../types';
-import { buildClassName, entityStyle } from '../utils/className';
 import '../styles/powerup.scss';
 
-interface PowerUpProps {
-  powerup: PowerUpType;
-  now: number;
-}
-
-function PowerUp({ powerup, now }: PowerUpProps): React.ReactElement | null {
-  const { active, collected, emergedAt, puType } = powerup;
+function PowerUp({ powerup, now }: { powerup: any; now: number }): React.ReactElement | null {
+  const { x, y, width, height, active, collected, emergedAt, puType } = powerup;
 
   // Remove after collected animation
   if (collected && now - emergedAt > 2000) return null;
@@ -17,18 +10,18 @@ function PowerUp({ powerup, now }: PowerUpProps): React.ReactElement | null {
   const isEmerging = now - emergedAt < 600;
   const isFireFlower = puType === 'fireflower';
 
-  const className = buildClassName('powerup', {
-    'powerup--flower': isFireFlower,
-    'powerup--mushroom': !isFireFlower,
-    'powerup--emerging': isEmerging,
-    'powerup--active': active && !collected,
-    'powerup--collected': collected,
-  });
+  const className = [
+    'powerup',
+    isFireFlower ? 'powerup--flower' : 'powerup--mushroom',
+    isEmerging ? 'powerup--emerging' : '',
+    active && !collected ? 'powerup--active' : '',
+    collected ? 'powerup--collected' : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <div
       className={className}
-      style={entityStyle(powerup)}
+      style={{ left: x, top: y, width, height }}
     >
       {isFireFlower ? (
         <div className="powerup__body powerup__body--flower">

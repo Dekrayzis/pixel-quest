@@ -62,30 +62,23 @@ function Platform({
         continue;
       }
 
-      const getItemTileClass = (baseClass: string, isUsed: boolean): string => 
-        isUsed ? `${baseClass} tile--item-used` : baseClass;
-
-      const tileClassMap: Record<number, string> = {
+      const tileClassMap: Record<number, string | ((used: boolean) => string)> = {
         1: 'tile--ground',
         2: 'tile--brick',
-        3: getItemTileClass('tile--item', isUsed),
-        4: getItemTileClass('tile--item', isUsed),
+        3: (used: boolean) => used ? 'tile--item tile--item-used' : 'tile--item',
+        4: (used: boolean) => used ? 'tile--item tile--item-used' : 'tile--item',
         5: 'tile--solid',
-        6: getItemTileClass('tile--item tile--item-fire', isUsed),
+        6: (used: boolean) => used ? 'tile--item tile--item-used' : 'tile--item tile--item-fire',
         7: 'tile--pipe-body',
         8: 'tile--pipe-top',
       };
 
-      const tileClass = tileClassMap[type];
-      if (!tileClass) continue;
-      className += ` ${tileClass}`;
+      const entry = tileClassMap[type];
+      if (!entry) continue;
+      className += ` ${typeof entry === 'function' ? entry(!!isUsed) : entry}`;
 
       if (isBumped) {
-        if (type === 2) {
-          className += ' tile--brick-bumped';
-        } else {
-          className += ' tile--item-bumped';
-        }
+        className += type === 2 ? ' tile--brick-bumped' : ' tile--item-bumped';
       }
 
       tiles.push(

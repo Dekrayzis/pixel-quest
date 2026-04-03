@@ -1,72 +1,38 @@
 import React from 'react';
 import '../styles/hud.scss';
 
-interface HUDProps {
-  score: number;
-  lives: number;
-  coinsCollected: number;
-}
-
-interface HUDSection {
+interface HUDSectionConfig {
   label: string;
-  value: string | number | React.ReactNode;
-  formatter?: (value: any) => string;
+  render: () => React.ReactNode;
 }
 
-function HUDSection({ label, value, formatter }: HUDSection): React.ReactElement {
-  const displayValue = formatter ? formatter(value) : value;
-  
-  return (
-    <div className="hud__section">
-      <span className="hud__label">{label}</span>
-      <span className="hud__value">{displayValue}</span>
-    </div>
-  );
-}
-
-function LivesSection({ lives }: { lives: number }): React.ReactElement {
-  return (
-    <div className="hud__section">
-      <span className="hud__label">LIVES</span>
-      <div className="hud__lives">
-        {Array.from({ length: lives }, (_, i) => (
-          <span key={i} className="life-icon">❤</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function HUD({ score, lives, coinsCollected }: HUDProps): React.ReactElement {
-  const hudSections: HUDSection[] = [
+const HUD = React.memo(function HUD({ score, lives, coinsCollected }: { score: number; lives: number; coinsCollected: number }): React.ReactElement {
+  const sections: HUDSectionConfig[] = [
+    { label: 'SCORE', render: () => String(score).padStart(6, '0') },
+    { label: 'COINS', render: () => coinsCollected },
     {
-      label: 'SCORE',
-      value: score,
-      formatter: (val: number) => String(val).padStart(6, '0'),
+      label: 'LIVES',
+      render: () => (
+        <div className="hud__lives">
+          {Array.from({ length: lives }, (_, i) => (
+            <span key={i} className="life-icon">❤</span>
+          ))}
+        </div>
+      ),
     },
-    {
-      label: 'COINS',
-      value: coinsCollected,
-    },
-    {
-      label: 'WORLD',
-      value: '1-1',
-    },
+    { label: 'WORLD', render: () => '1-1' },
   ];
 
   return (
     <div className="hud">
-      {hudSections.map((section) => (
-        <HUDSection 
-          key={section.label}
-          label={section.label}
-          value={section.value}
-          formatter={section.formatter}
-        />
+      {sections.map(({ label, render }) => (
+        <div key={label} className="hud__section">
+          <span className="hud__label">{label}</span>
+          <span className="hud__value">{render()}</span>
+        </div>
       ))}
-      <LivesSection lives={lives} />
     </div>
   );
-}
+});
 
 export default HUD;

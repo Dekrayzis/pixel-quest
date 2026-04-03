@@ -1,30 +1,24 @@
 import React from 'react';
-import { Enemy as EnemyType } from '../types';
-import { buildClassName, entityStyle } from '../utils/className';
 import '../styles/enemy.scss';
 
-interface EnemyProps {
-  enemy: EnemyType;
-  now: number;
-}
-
-function Enemy({ enemy, now }: EnemyProps): React.ReactElement | null {
-  const { type, vx, alive, defeatedAt } = enemy;
+function Enemy({ enemy, now }: { enemy: any; now: number }): React.ReactElement | null {
+  const { type, x, y, width, height, vx, alive, defeatedAt } = enemy;
   const isDefeated = !alive;
 
-  const className = buildClassName('enemy', {
-    [`enemy--${type}`]: true,
-    'enemy--defeated': isDefeated,
-    'enemy--facing-left': vx < 0,
-  });
+  const classNames = [
+    'enemy',
+    `enemy--${type}`,
+    isDefeated ? 'enemy--defeated' : '',
+    vx < 0 ? 'enemy--facing-left' : '',
+  ].filter(Boolean).join(' ');
 
   // Don't render if defeated animation is done
   if (isDefeated && now - defeatedAt > 500) return null;
 
   return (
     <div
-      className={className}
-      style={entityStyle(enemy)}
+      className={classNames}
+      style={{ left: x, top: y, width, height }}
     >
       <div className="enemy__body">
         {type === 'goomba' && (

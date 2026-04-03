@@ -1,22 +1,18 @@
 import React from 'react';
-import { buildClassName } from '../utils/className';
 import '../styles/gameover.scss';
 
-interface GameOverScreenProps {
-  status: 'start' | 'playing' | 'won' | 'lost';
-  score: number;
-}
-
-interface OverlayContent {
+interface OverlayConfig {
+  modifier: string;
   title: string;
   subtitle?: string;
-  score?: boolean;
+  showScore?: boolean;
   prompt: string;
   controls?: React.ReactNode;
 }
 
-const overlayConfigs: Record<string, OverlayContent> = {
+const OVERLAY_CONFIGS: Record<string, OverlayConfig> = {
   start: {
+    modifier: 'start',
     title: 'PIXEL QUEST',
     subtitle: 'Emerald Plains',
     prompt: 'Press ENTER to Start',
@@ -29,45 +25,31 @@ const overlayConfigs: Record<string, OverlayContent> = {
     ),
   },
   won: {
+    modifier: 'win',
     title: 'YOU WIN!',
     subtitle: 'Emerald Plains Cleared!',
-    score: true,
+    showScore: true,
     prompt: 'Press ENTER to Play Again',
   },
   lost: {
+    modifier: 'lose',
     title: 'GAME OVER',
-    score: true,
+    showScore: true,
     prompt: 'Press ENTER to Retry',
   },
 };
 
-function GameOverlay({ status, content, score }: { status: string; content: OverlayContent; score: number }): React.ReactElement {
-  const className = buildClassName('game-overlay', {
-    [`game-overlay--${status}`]: true,
-  });
+export default function GameOverScreen({ status, score }: { status: string; score: number }): React.ReactElement | null {
+  const config = OVERLAY_CONFIGS[status];
+  if (!config) return null;
 
   return (
-    <div className={className}>
-      <div className="game-overlay__title">{content.title}</div>
-      {content.subtitle && (
-        <div className="game-overlay__subtitle">{content.subtitle}</div>
-      )}
-      {content.score && (
-        <div className="game-overlay__score">Score: {score}</div>
-      )}
-      <div className="game-overlay__prompt">{content.prompt}</div>
-      {content.controls && (
-        <div className="game-overlay__controls">{content.controls}</div>
-      )}
+    <div className={`game-overlay game-overlay--${config.modifier}`}>
+      <div className="game-overlay__title">{config.title}</div>
+      {config.subtitle && <div className="game-overlay__subtitle">{config.subtitle}</div>}
+      {config.showScore && <div className="game-overlay__score">Score: {score}</div>}
+      <div className="game-overlay__prompt">{config.prompt}</div>
+      {config.controls && <div className="game-overlay__controls">{config.controls}</div>}
     </div>
   );
-}
-
-export default function GameOverScreen({ status, score }: GameOverScreenProps): React.ReactElement | null {
-  if (status === 'playing') return null;
-
-  const content = overlayConfigs[status];
-  if (!content) return null;
-
-  return <GameOverlay status={status} content={content} score={score} />;
 }

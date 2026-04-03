@@ -1,19 +1,13 @@
 import React from 'react';
-import { Projectile as ProjectileType } from '../types';
-import { entityStyle } from '../utils/className';
 import '../styles/projectile.scss';
 
-interface ProjectileProps {
-  projectile: ProjectileType;
-}
-
-function Projectile({ projectile }: ProjectileProps): React.ReactElement {
-  const { direction } = projectile;
+function Projectile({ projectile }: { projectile: any }): React.ReactElement {
+  const { x, y, width, height, direction } = projectile;
 
   return (
     <div
       className="projectile"
-      style={entityStyle(projectile)}
+      style={{ left: x, top: y, width, height }}
     >
       <div className="projectile__ball" />
       <div
