@@ -123,4 +123,4 @@ The game automatically scales down to fit smaller screens while maintaining the 
 ![Gameplay screenshot showing fireball combat](./screenshots/gameplay-5.png)
 ![Gameplay screenshot showing flag pole win sequence](./screenshots/gameplay-4.png)
 
-[![Watch gameplay video](./screenshots/gameplay-1.png)](./screenshots/gameplay.mp4)
+[![Watch gameplay video](./screenshots/gameplay.mp4)]
