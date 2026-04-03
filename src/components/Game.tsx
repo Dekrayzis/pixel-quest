@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useReducer, useState, useCallback } from 'react';
 import { VIEWPORT_W, VIEWPORT_H, TILE } from '../config/constants';
-import { LEVEL_W } from '../data/level1';
+import { LEVEL_W, UNDERGROUND_W } from '../data/level1';
 import useInput from '../hooks/useInput';
 import { tickGameState, createInitialState } from '../hooks/useGameState';
 
@@ -97,14 +97,17 @@ export default function Game(): React.ReactElement {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // ── Camera: follow player, clamped to level bounds ──
+  // ── Camera: follow player, clamped to level bounds (zone-aware) ──
+  const zoneLevelW = state.currentZone === 'underground' ? UNDERGROUND_W : LEVEL_W;
   const cameraX = Math.max(
     0,
     Math.min(
       state.player.x - VIEWPORT_W / 2 + state.player.width / 2,
-      LEVEL_W - VIEWPORT_W
+      Math.max(0, zoneLevelW - VIEWPORT_W)
     )
   );
+  const isUnderground = state.currentZone === 'underground';
+  const isWarping = state.warpState === 'transitioning';
 
   // Decorative background elements (clouds + hills, parallax)
   const bgElements = useMemo(() => {
@@ -142,7 +145,7 @@ export default function Game(): React.ReactElement {
       }}
     >
     <div
-      className="game-viewport"
+      className={`game-viewport${isUnderground ? ' game-viewport--underground' : ''}`}
       style={{
         width: VIEWPORT_W,
         height: VIEWPORT_H,
@@ -156,11 +159,13 @@ export default function Game(): React.ReactElement {
         className="game-world"
         style={{ transform: `translateX(${-cameraX}px)` }}
       >
-        {/* Background decorations (parallax at 0.3x) */}
-        <div style={{ transform: `translateX(${cameraX * 0.7}px)` }}>
-          {bgElements.clouds}
-          {bgElements.hills}
-        </div>
+        {/* Background decorations (parallax at 0.3x) — hidden underground */}
+        {!isUnderground && (
+          <div style={{ transform: `translateX(${cameraX * 0.7}px)` }}>
+            {bgElements.clouds}
+            {bgElements.hills}
+          </div>
+        )}
 
         {/* Tiles */}
         <Platform
@@ -169,10 +174,11 @@ export default function Game(): React.ReactElement {
           bumpedBlocks={state.bumpedBlocks}
           breakingBricks={state.breakingBricks}
           cameraX={cameraX}
+          currentZone={state.currentZone}
         />
 
-        {/* Coins */}
-        {state.coins.map((coin: any) => {
+        {/* Coins (zone-aware) */}
+        {(isUnderground ? state.undergroundCoins : state.coins).map((coin: any) => {
           if (coin.x < cameraX - TILE || coin.x > cameraX + VIEWPORT_W + TILE) return null;
           return <Coin key={coin.id} coin={coin} now={state.now} />;
         })}
@@ -194,11 +200,13 @@ export default function Game(): React.ReactElement {
           <Projectile key={proj.id} projectile={proj} />
         ))}
 
-        {/* Flag pole */}
-        <FlagPole
-          flagReached={state.flagReached}
-          flagSlideProgress={state.flagSlideProgress}
-        />
+        {/* Flag pole (overworld only) */}
+        {!isUnderground && (
+          <FlagPole
+            flagReached={state.flagReached}
+            flagSlideProgress={state.flagSlideProgress}
+          />
+        )}
 
         {/* Player */}
         <Player player={state.player} now={state.now} />
@@ -221,6 +229,11 @@ export default function Game(): React.ReactElement {
         lives={state.lives}
         coinsCollected={state.coinsCollected}
       />
+
+      {/* Warp transition overlay */}
+      {isWarping && (
+        <div className="warp-overlay" />
+      )}
 
       {/* Overlays */}
       <GameOverScreen

@@ -7,17 +7,19 @@ const CONTROLS: Record<string, string[]> = {
   LEFT: ['ArrowLeft', 'a', 'A'],
   RIGHT: ['ArrowRight', 'd', 'D'],
   JUMP: ['ArrowUp', 'w', 'W', ' '],
+  DOWN: ['ArrowDown', 's', 'S'],
   FIRE: ['f', 'F'],
 };
 
 const ALL_GAME_KEYS = [
-  ...CONTROLS.LEFT, ...CONTROLS.RIGHT, ...CONTROLS.JUMP, ...CONTROLS.FIRE,
+  ...CONTROLS.LEFT, ...CONTROLS.RIGHT, ...CONTROLS.JUMP, ...CONTROLS.DOWN, ...CONTROLS.FIRE,
 ];
 
 export interface GameKeys {
   left: boolean;
   right: boolean;
   jump: boolean;
+  down: boolean;
   fire: boolean;
 }
 
@@ -41,6 +43,7 @@ export default function useInput(): UseInputReturn {
     left: false,
     right: false,
     jump: false,
+    down: false,
     fire: false,
   });
 
@@ -64,6 +67,7 @@ export default function useInput(): UseInputReturn {
         if (!keys.current.jump) justPressed.current.jump = performance.now();
         keys.current.jump = true;
       }
+      if (isAction(e.key, 'DOWN'))  keys.current.down = true;
       if (isAction(e.key, 'FIRE')) {
         if (!keys.current.fire) justPressed.current.fire = true;
         keys.current.fire = true;
@@ -78,6 +82,7 @@ export default function useInput(): UseInputReturn {
       if (isAction(e.key, 'LEFT'))  keys.current.left = false;
       if (isAction(e.key, 'RIGHT')) keys.current.right = false;
       if (isAction(e.key, 'JUMP'))  keys.current.jump = false;
+      if (isAction(e.key, 'DOWN'))  keys.current.down = false;
       if (isAction(e.key, 'FIRE'))  keys.current.fire = false;
     };
 

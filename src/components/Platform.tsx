@@ -1,6 +1,9 @@
 import React from 'react';
 import { TILE } from '../config/constants';
-import { MAP, LEVEL_COLS, LEVEL_ROWS } from '../data/level1';
+import {
+  MAP, LEVEL_COLS, LEVEL_ROWS,
+  UNDERGROUND_MAP, UNDERGROUND_COLS, UNDERGROUND_ROWS,
+} from '../data/level1';
 import '../styles/platform.scss';
 import '../styles/block.scss';
 
@@ -10,6 +13,7 @@ interface PlatformProps {
   bumpedBlocks: Record<string, number>;
   breakingBricks: Record<string, number>;
   cameraX: number;
+  currentZone: string;
 }
 
 /**
@@ -22,16 +26,22 @@ function Platform({
   bumpedBlocks,
   breakingBricks,
   cameraX,
+  currentZone,
 }: PlatformProps): React.ReactElement {
+  const isUnderground = currentZone === 'underground';
+  const map = isUnderground ? UNDERGROUND_MAP : MAP;
+  const cols = isUnderground ? UNDERGROUND_COLS : LEVEL_COLS;
+  const rows = isUnderground ? UNDERGROUND_ROWS : LEVEL_ROWS;
+
   // Only render tiles visible in viewport + buffer
   const startCol = Math.max(0, Math.floor(cameraX / TILE) - 2);
-  const endCol = Math.min(LEVEL_COLS - 1, Math.floor((cameraX + 960) / TILE) + 2);
+  const endCol = Math.min(cols - 1, Math.floor((cameraX + 960) / TILE) + 2);
 
   const tiles = [];
 
-  for (let row = 0; row < LEVEL_ROWS; row++) {
+  for (let row = 0; row < rows; row++) {
     for (let col = startCol; col <= endCol; col++) {
-      const type = MAP[row][col];
+      const type = map[row][col];
       if (type === 0) continue;
 
       const key = `${row}-${col}`;

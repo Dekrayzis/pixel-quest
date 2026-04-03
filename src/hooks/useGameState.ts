@@ -6,6 +6,8 @@ import {
 } from '../config/constants';
 import {
   MAP, LEVEL_W, LEVEL_H, LEVEL_COLS, LEVEL_ROWS,
+  UNDERGROUND_MAP, UNDERGROUND_W, UNDERGROUND_H, UNDERGROUND_COLS, UNDERGROUND_ROWS,
+  UNDERGROUND_COINS, WARP_PIPES,
   PLAYER_START, ENEMIES as ENEMY_SPAWNS,
   COINS as COIN_SPAWNS, FLAG_POS,
 } from '../data/level1';
@@ -80,6 +82,14 @@ export function createInitialState(): any {
     flagSlideProgress: 0, // 0..1, driven by tick
     flagGroundedAt: 0,
     now: 0,
+    // Zone / warp pipe state
+    currentZone: 'overworld' as string,
+    warpState: 'none' as string, // 'none' | 'sinking' | 'transitioning' | 'emerging'
+    warpStartTime: 0,
+    warpPipeId: null as string | null,
+    // Underground-specific coins (added when first entering underground)
+    undergroundCoins: [] as any[],
+    undergroundVisited: false,
   };
 }
 
@@ -92,6 +102,13 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   const now = performance.now();
   s.now = now;
   const keys = inputKeys.current;
+  const zone: string = s.currentZone;
+
+  // ── Warp pipe animation (overrides everything) ──
+  if (s.warpState !== 'none') {
+    updateWarpSequence(s, now);
+    return;
+  }
 
   // ── Flag pole sequence (overrides normal movement) ──
   const p = s.player;
@@ -150,18 +167,20 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
 
   // ── Move X then resolve ─────────────────────────
   p.x += p.vx;
-  resolvePlayerTileCollisionsX(s);
+  resolvePlayerTileCollisionsX(s, zone);
 
   // ── Move Y then resolve ─────────────────────────
   p.y += p.vy;
-  resolvePlayerTileCollisionsY(s);
+  resolvePlayerTileCollisionsY(s, zone);
 
-  // Clamp to level bounds
+  // Clamp to level bounds (zone-aware)
+  const zoneW = zone === 'underground' ? UNDERGROUND_W : LEVEL_W;
+  const zoneH = zone === 'underground' ? UNDERGROUND_H : LEVEL_H;
   if (p.x < 0) p.x = 0;
-  if (p.x + p.width > LEVEL_W) p.x = LEVEL_W - p.width;
+  if (p.x + p.width > zoneW) p.x = zoneW - p.width;
 
   // Fell into pit
-  if (p.y > LEVEL_H + 50) {
+  if (p.y > zoneH + 50) {
     handlePlayerDeath(s);
     return;
   }
@@ -195,10 +214,10 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   }
 
   // ── Update projectiles ──────────────────────────
-  updateProjectiles(s, now);
+  updateProjectiles(s, now, zone);
 
   // ── Update enemies ──────────────────────────────
-  updateEnemies(s, now);
+  updateEnemies(s, now, zone);
 
   // ── Player vs enemies ───────────────────────────
   checkPlayerEnemyCollisions(s, now);
@@ -207,10 +226,13 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   checkPlayerCoinCollisions(s, now);
 
   // ── Player vs powerups ──────────────────────────
-  checkPlayerPowerupCollisions(s, now);
+  checkPlayerPowerupCollisions(s, now, zone);
 
-  // ── Player vs flag ──────────────────────────────
-  checkFlagCollision(s, now);
+  // ── Player vs flag (overworld only) ───────────────
+  if (zone === 'overworld') checkFlagCollision(s, now);
+
+  // ── Warp pipe detection ───────────────────────────
+  checkWarpPipeEntry(s, keys, consumeJustPressed, now);
 
   // ── Cleanup dead popups ─────────────────────────
   s.popups = s.popups.filter((pop: any) => now - pop.createdAt < 1000);
@@ -234,9 +256,9 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
    Helper functions (pure logic, operate on state obj)
    ══════════════════════════════════════════════════════ */
 
-function resolvePlayerTileCollisionsX(s: any): void {
+function resolvePlayerTileCollisionsX(s: any, zone = 'overworld'): void {
   const p = s.player;
-  const tiles = getSolidTilesInRect(p);
+  const tiles = getSolidTilesInRect(p, zone);
 
   for (const tile of tiles) {
     // Skip broken bricks
@@ -257,9 +279,9 @@ function resolvePlayerTileCollisionsX(s: any): void {
   }
 }
 
-function resolvePlayerTileCollisionsY(s: any): void {
+function resolvePlayerTileCollisionsY(s: any, zone = 'overworld'): void {
   const p = s.player;
-  const tiles = getSolidTilesInRect(p);
+  const tiles = getSolidTilesInRect(p, zone);
   p.onGround = false;
 
   for (const tile of tiles) {
@@ -354,7 +376,7 @@ function handleBlockHitFromBelow(s: any, tile: any, key: string): void {
   }
 }
 
-function updateProjectiles(s: any, now: number): void {
+function updateProjectiles(s: any, now: number, zone = 'overworld'): void {
   const PROJ_GRAVITY = 0.5;
   const PROJ_BOUNCE_VY = -6; // upward velocity on bounce
   const PROJ_MAX_BOUNCES = 4;
@@ -369,10 +391,11 @@ function updateProjectiles(s: any, now: number): void {
     if (now - proj.createdAt > PROJECTILE.LIFETIME) return false;
 
     // Fell off the level
-    if (proj.y > LEVEL_H + 50) return false;
+    const projLevelH = zone === 'underground' ? UNDERGROUND_H : LEVEL_H;
+    if (proj.y > projLevelH + 50) return false;
 
     // Tile collisions — bounce off ground, die on walls
-    const tiles = getSolidTilesInRect(proj);
+    const tiles = getSolidTilesInRect(proj, zone);
     for (const tile of tiles) {
       const key = `${tile.row}-${tile.col}`;
       if (s.brokenBricks[key]) continue;
@@ -417,7 +440,7 @@ function updateProjectiles(s: any, now: number): void {
   });
 }
 
-function updateEnemies(s: any, now: number): void {
+function updateEnemies(s: any, now: number, zone = 'overworld'): void {
   for (const enemy of s.enemies) {
     if (!enemy.alive) continue;
 
@@ -427,7 +450,7 @@ function updateEnemies(s: any, now: number): void {
 
       // Tile collisions for goomba
       const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
-      const tiles = getSolidTilesInRect(rect);
+      const tiles = getSolidTilesInRect(rect, zone);
       for (const tile of tiles) {
         const key = `${tile.row}-${tile.col}`;
         if (s.brokenBricks[key]) continue;
@@ -446,8 +469,11 @@ function updateEnemies(s: any, now: number): void {
       const checkY = enemy.y + enemy.height + 4;
       const col = Math.floor(checkX / TILE);
       const row = Math.floor(checkY / TILE);
-      if (col >= 0 && col < LEVEL_COLS && row >= 0 && row < LEVEL_ROWS) {
-        const aheadTile = MAP[row][col];
+      const zCols = zone === 'underground' ? UNDERGROUND_COLS : LEVEL_COLS;
+      const zRows = zone === 'underground' ? UNDERGROUND_ROWS : LEVEL_ROWS;
+      const zMap = zone === 'underground' ? UNDERGROUND_MAP : MAP;
+      if (col >= 0 && col < zCols && row >= 0 && row < zRows) {
+        const aheadTile = zMap[row][col];
         const aheadKey = `${row}-${col}`;
         if (!isSolidTile(aheadTile) || s.brokenBricks[aheadKey]) {
           enemy.vx = -enemy.vx;
@@ -463,7 +489,7 @@ function updateEnemies(s: any, now: number): void {
 
       // Reverse at edges or walls
       const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
-      const tiles = getSolidTilesInRect(rect);
+      const tiles = getSolidTilesInRect(rect, zone);
       for (const tile of tiles) {
         const key = `${tile.row}-${tile.col}`;
         if (s.brokenBricks[key]) continue;
@@ -475,7 +501,8 @@ function updateEnemies(s: any, now: number): void {
       }
 
       // Level edge bounce
-      if (enemy.x < 0 || enemy.x + enemy.width > LEVEL_W) {
+      const eLevelW = zone === 'underground' ? UNDERGROUND_W : LEVEL_W;
+      if (enemy.x < 0 || enemy.x + enemy.width > eLevelW) {
         enemy.vx = -enemy.vx;
       }
     }
@@ -527,8 +554,9 @@ function checkPlayerEnemyCollisions(s: any, now: number): void {
 
 function checkPlayerCoinCollisions(s: any, now: number): void {
   const p = s.player;
+  const coinList = s.currentZone === 'underground' ? s.undergroundCoins : s.coins;
 
-  for (const coin of s.coins) {
+  for (const coin of coinList) {
     if (coin.collected) continue;
     if (aabbOverlap(p, coin)) {
       coin.collected = true;
@@ -539,7 +567,7 @@ function checkPlayerCoinCollisions(s: any, now: number): void {
   }
 }
 
-function checkPlayerPowerupCollisions(s: any, now: number): void {
+function checkPlayerPowerupCollisions(s: any, now: number, zone = 'overworld'): void {
   const p = s.player;
 
   for (const pu of s.powerups) {
@@ -558,7 +586,7 @@ function checkPlayerPowerupCollisions(s: any, now: number): void {
     pu.y += pu.vy;
 
     // Powerup tile collision
-    const tiles = getSolidTilesInRect(pu);
+    const tiles = getSolidTilesInRect(pu, zone);
     for (const tile of tiles) {
       const key = `${tile.row}-${tile.col}`;
       if (s.brokenBricks[key]) continue;
@@ -614,8 +642,8 @@ function checkFlagCollision(s: any, now: number): void {
     s.flagPhase = 'sliding';
     s.flagSlideStartY = p.y;
     s.score += 1000;
-    // Snap player to the pole and freeze
-    p.x = FLAG_POS.x - p.width + 6; // hug the pole
+    // Snap player to the pole and freeze (pole center = FLAG_POS.x + 30)
+    p.x = FLAG_POS.x + 30 - p.width; // right edge hugs the pole
     p.vx = 0;
     p.vy = 0;
     p.facing = 1;
@@ -639,7 +667,7 @@ function updateFlagSequence(s: any, now: number): void {
     s.flagSlideProgress = slideProgress;
     const targetY = FLAG_GROUND_Y - p.height;
     p.y = s.flagSlideStartY + (targetY - s.flagSlideStartY) * slideProgress;
-    p.x = FLAG_POS.x - p.width + 6;
+    p.x = FLAG_POS.x + 30 - p.width;
     p.vx = 0;
     p.vy = 0;
     p.state = 'idle';
@@ -673,7 +701,7 @@ function updateFlagSequence(s: any, now: number): void {
     // Apply gravity + ground collision while walking
     p.vy = Math.min(p.vy + GRAVITY, MAX_FALL_SPEED);
     p.y += p.vy;
-    resolvePlayerTileCollisionsY(s);
+    resolvePlayerTileCollisionsY(s, s.currentZone);
 
     if (p.x >= FLAG_WALK_TARGET_X) {
       s.gameStatus = 'won';
@@ -686,7 +714,9 @@ function handlePlayerDeath(s: any): void {
   if (s.lives <= 0) {
     s.gameStatus = 'lost';
   } else {
-    // Respawn
+    // Respawn in overworld
+    s.currentZone = 'overworld';
+    s.warpState = 'none';
     const p = s.player;
     p.x = PLAYER_START.x;
     p.y = PLAYER_START.y;
@@ -698,5 +728,133 @@ function handlePlayerDeath(s: any): void {
     p.height = PLAYER.HEIGHT;
     p.onGround = false;
     p.invincibleUntil = performance.now() + 2000;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   Warp pipe logic
+   ══════════════════════════════════════════════════════ */
+
+const WARP_SINK_DURATION = 600;   // ms to sink into pipe
+const WARP_TRANSITION_DURATION = 400; // ms black screen
+const WARP_EMERGE_DURATION = 600; // ms to rise out of pipe
+
+/**
+ * Check if the player is standing on a warp pipe-top and pressing down.
+ * If so, start the sinking animation.
+ */
+function checkWarpPipeEntry(s: any, keys: GameKeys, _consumeJustPressed: (action: string) => boolean, now: number): void {
+  if (!keys.down) return;
+  if (!s.player.onGround) return;
+
+  const p = s.player;
+  const zone = s.currentZone;
+
+  // Find the pipe-top tile the player is standing on
+  // Player's feet are at p.y + p.height; the tile below is at row = floor((p.y + p.height) / TILE)
+  const feetRow = Math.floor((p.y + p.height) / TILE);
+  const playerCenterCol = Math.floor((p.x + p.width / 2) / TILE);
+
+  // Check if the tile the player is standing on is a pipe-top (type 8)
+  // The pipe-top row is feetRow (the tile the player landed on)
+  // But the player stands ON TOP of the pipe, so the pipe-top is at feetRow
+  const zMap = zone === 'underground' ? UNDERGROUND_MAP : MAP;
+  const zCols = zone === 'underground' ? UNDERGROUND_COLS : LEVEL_COLS;
+  const zRows = zone === 'underground' ? UNDERGROUND_ROWS : LEVEL_ROWS;
+
+  if (feetRow < 0 || feetRow >= zRows || playerCenterCol < 0 || playerCenterCol >= zCols) return;
+  const tileType = zMap[feetRow][playerCenterCol];
+  if (tileType !== 8) return;
+
+  // Find the left column of this 2-wide pipe-top
+  let pipeLeftCol = playerCenterCol;
+  if (playerCenterCol > 0 && zMap[feetRow][playerCenterCol - 1] === 8) {
+    pipeLeftCol = playerCenterCol - 1;
+  }
+
+  // Check if this pipe matches any warp pipe entry
+  for (const wp of WARP_PIPES) {
+    if (wp.entryZone === zone && wp.entryCol === pipeLeftCol && wp.entryRow === feetRow) {
+      // Start sinking into pipe
+      s.warpState = 'sinking';
+      s.warpStartTime = now;
+      s.warpPipeId = wp.id;
+      p.vx = 0;
+      p.vy = 0;
+      p.state = 'idle';
+      // Center player on pipe
+      p.x = pipeLeftCol * TILE + (TILE - p.width / 2) / 2;
+      return;
+    }
+  }
+}
+
+/**
+ * Handle the warp pipe animation sequence:
+ * 1. sinking — player slides down into the pipe
+ * 2. transitioning — brief black-screen pause, switch zone
+ * 3. emerging — player rises out of exit pipe
+ */
+function updateWarpSequence(s: any, now: number): void {
+  const elapsed = now - s.warpStartTime;
+  const p = s.player;
+  const warp = WARP_PIPES.find((wp: any) => wp.id === s.warpPipeId);
+  if (!warp) { s.warpState = 'none'; return; }
+
+  if (s.warpState === 'sinking') {
+    // Player sinks down by 1 tile over WARP_SINK_DURATION
+    const progress = Math.min(elapsed / WARP_SINK_DURATION, 1);
+    p.y += 1.5; // move down each frame
+    p.vx = 0;
+    p.vy = 0;
+    p.state = 'idle';
+
+    if (progress >= 1) {
+      s.warpState = 'transitioning';
+      s.warpStartTime = now;
+    }
+  } else if (s.warpState === 'transitioning') {
+    // Brief pause — switch zone
+    if (elapsed >= WARP_TRANSITION_DURATION) {
+      // Switch to exit zone
+      s.currentZone = warp.exitZone;
+      p.x = warp.exitPlayerX;
+      // Start below the exit pipe (hidden) then rise up
+      p.y = warp.exitPlayerY + TILE * 1.5;
+      p.vx = 0;
+      p.vy = 0;
+
+      // Initialize underground coins on first visit
+      if (warp.exitZone === 'underground' && !s.undergroundVisited) {
+        s.undergroundVisited = true;
+        s.undergroundCoins = UNDERGROUND_COINS.map((c: any, i: number) => ({
+          id: `ug-coin-${i}`,
+          x: c.x,
+          y: c.y,
+          width: 24,
+          height: 28,
+          collected: false,
+          collectedAt: 0,
+        }));
+      }
+
+      s.warpState = 'emerging';
+      s.warpStartTime = now;
+    }
+  } else if (s.warpState === 'emerging') {
+    // Player rises out of exit pipe
+    const progress = Math.min(elapsed / WARP_EMERGE_DURATION, 1);
+    const targetY = warp.exitPlayerY;
+    const startY = targetY + TILE * 1.5;
+    p.y = startY + (targetY - startY) * progress;
+    p.vx = 0;
+    p.vy = 0;
+    p.state = 'idle';
+
+    if (progress >= 1) {
+      s.warpState = 'none';
+      p.y = targetY;
+      p.onGround = true;
+    }
   }
 }

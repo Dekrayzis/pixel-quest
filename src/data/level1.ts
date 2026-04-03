@@ -76,3 +76,92 @@ export const COINS = [
 
 // Flag pole position (the end-of-level goal)
 export const FLAG_POS = { x: 76.08 * TILE - 10, y: 4 * TILE };
+
+/* ──────────────────────────────────────────────────────
+   Underground sub-area
+   ────────────────────────────────────────────────────── */
+
+/**
+ * Underground zone — a small enclosed room the player warps into.
+ * 20 columns × 12 rows. Pipe on the right side exits back to overworld.
+ * Uses the same tile legend as the overworld map.
+ */
+// prettier-ignore
+export const UNDERGROUND_MAP: number[][] = [
+// 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19
+  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // ceiling
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 0, 0, 0, 5], // brick/coin row + exit pipe top
+  [5, 0, 0, 2, 3, 2, 3, 2, 3, 2, 0, 0, 0, 0, 7, 7, 0, 0, 0, 5],
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 0, 0, 0, 5],
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 7, 7, 0, 0, 0, 5], // step to reach pipe
+  [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 0, 0, 0, 5],
+  [5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5], // floor
+  [5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5],
+];
+
+export const UNDERGROUND_COLS = UNDERGROUND_MAP[0].length;
+export const UNDERGROUND_ROWS = UNDERGROUND_MAP.length;
+export const UNDERGROUND_W = UNDERGROUND_COLS * TILE;
+export const UNDERGROUND_H = UNDERGROUND_ROWS * TILE;
+
+// Coins in the underground area
+export const UNDERGROUND_COINS = [
+  { x: 5 * TILE + 4, y: 9 * TILE },
+  { x: 6 * TILE + 4, y: 9 * TILE },
+  { x: 7 * TILE + 4, y: 9 * TILE },
+  { x: 8 * TILE + 4, y: 9 * TILE },
+  { x: 9 * TILE + 4, y: 9 * TILE },
+  { x: 10 * TILE + 4, y: 9 * TILE },
+];
+
+/**
+ * Warp pipe definitions.
+ * Each warp links an entry pipe (in one zone) to an exit pipe (in another zone).
+ *
+ * - entryZone / exitZone: 'overworld' or 'underground'
+ * - entryCol, entryRow: the LEFT column of the 2-wide pipe-top (tile type 8) that triggers the warp
+ * - exitCol, exitRow: the LEFT column of the 2-wide pipe-top the player emerges from
+ * - exitPlayerX, exitPlayerY: pixel position where the player appears after emerging
+ */
+export interface WarpPipe {
+  id: string;
+  entryZone: string;
+  entryCol: number;
+  entryRow: number;
+  exitZone: string;
+  exitCol: number;
+  exitRow: number;
+  exitPlayerX: number;
+  exitPlayerY: number;
+}
+
+export const WARP_PIPES: WarpPipe[] = [
+  {
+    // Overworld pipe at col 14-15 → underground spawn
+    id: 'warp-ow-to-ug',
+    entryZone: 'overworld',
+    entryCol: 14,
+    entryRow: 8,
+    exitZone: 'underground',
+    exitCol: 16,    // irrelevant for entry, used for emerge reference
+    exitRow: 5,
+    exitPlayerX: 2 * TILE,
+    exitPlayerY: 9 * TILE - 48,
+  },
+  {
+    // Underground exit pipe at col 14-15, row 5 → overworld emerge at 2nd pipe (col 28-29, row 7)
+    id: 'warp-ug-to-ow',
+    entryZone: 'underground',
+    entryCol: 14,
+    entryRow: 5,
+    exitZone: 'overworld',
+    exitCol: 28,
+    exitRow: 7,
+    exitPlayerX: 28 * TILE,
+    exitPlayerY: 7 * TILE - 48,
+  },
+];

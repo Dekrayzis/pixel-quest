@@ -1,7 +1,10 @@
 import { GRAVITY, MAX_FALL_SPEED, TILE } from '../config/constants';
-import { MAP, LEVEL_COLS, LEVEL_ROWS } from '../data/level1';
+import {
+  MAP, LEVEL_COLS, LEVEL_ROWS,
+  UNDERGROUND_MAP, UNDERGROUND_COLS, UNDERGROUND_ROWS,
+} from '../data/level1';
 
-interface TileRect {
+export interface TileRect {
   x: number;
   y: number;
   width: number;
@@ -9,6 +12,14 @@ interface TileRect {
   row: number;
   col: number;
   type: number;
+}
+
+/** Map data lookup by zone name */
+function getZoneData(zone: string): { map: number[][]; cols: number; rows: number } {
+  if (zone === 'underground') {
+    return { map: UNDERGROUND_MAP, cols: UNDERGROUND_COLS, rows: UNDERGROUND_ROWS };
+  }
+  return { map: MAP, cols: LEVEL_COLS, rows: LEVEL_ROWS };
 }
 
 /**
@@ -22,11 +33,12 @@ export function applyGravity(vy: number): number {
  * Get the tile type at a given pixel position.
  * Returns 0 (empty) for out-of-bounds.
  */
-export function getTileAt(px: number, py: number): number {
+export function getTileAt(px: number, py: number, zone = 'overworld'): number {
+  const { map, cols, rows } = getZoneData(zone);
   const col = Math.floor(px / TILE);
   const row = Math.floor(py / TILE);
-  if (col < 0 || col >= LEVEL_COLS || row < 0 || row >= LEVEL_ROWS) return 0;
-  return MAP[row][col];
+  if (col < 0 || col >= cols || row < 0 || row >= rows) return 0;
+  return map[row][col];
 }
 
 /**
@@ -41,16 +53,17 @@ export function isSolidTile(type: number): boolean {
  * Get all solid tile rects that overlap a given AABB (entity bounding box).
  * Used for broad-phase tile collision.
  */
-export function getSolidTilesInRect(rect: { x: number; y: number; width: number; height: number }): TileRect[] {
+export function getSolidTilesInRect(rect: { x: number; y: number; width: number; height: number }, zone = 'overworld'): TileRect[] {
+  const { map, cols, rows } = getZoneData(zone);
   const tiles: TileRect[] = [];
   const startCol = Math.max(0, Math.floor(rect.x / TILE));
-  const endCol = Math.min(LEVEL_COLS - 1, Math.floor((rect.x + rect.width - 1) / TILE));
+  const endCol = Math.min(cols - 1, Math.floor((rect.x + rect.width - 1) / TILE));
   const startRow = Math.max(0, Math.floor(rect.y / TILE));
-  const endRow = Math.min(LEVEL_ROWS - 1, Math.floor((rect.y + rect.height - 1) / TILE));
+  const endRow = Math.min(rows - 1, Math.floor((rect.y + rect.height - 1) / TILE));
 
   for (let row = startRow; row <= endRow; row++) {
     for (let col = startCol; col <= endCol; col++) {
-      const type = MAP[row][col];
+      const type = map[row][col];
       if (isSolidTile(type)) {
         tiles.push({
           x: col * TILE,
