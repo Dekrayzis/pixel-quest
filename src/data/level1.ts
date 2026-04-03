@@ -44,17 +44,20 @@ export const LEVEL_H = LEVEL_ROWS * TILE;
 // Positions in pixels (can use col * TILE for alignment).
 export const PLAYER_START = { x: 2 * TILE, y: 10 * TILE - 48 };
 
-export const ENEMIES = [
-  { type: 'goomba' as const, x: 10 * TILE, y: 10 * TILE - 44 },
-  { type: 'goomba' as const, x: 22 * TILE, y: 10 * TILE - 44 },
-  { type: 'flyer' as const,  x: 15 * TILE, y: 5 * TILE },
-  { type: 'goomba' as const, x: 34 * TILE, y: 10 * TILE - 44 },
-  { type: 'goomba' as const, x: 42 * TILE, y: 10 * TILE - 44 },
-  { type: 'flyer' as const,  x: 38 * TILE, y: 4 * TILE },
-  { type: 'goomba' as const, x: 50 * TILE, y: 10 * TILE - 44 },
-  { type: 'flyer' as const,  x: 55 * TILE, y: 5 * TILE },
-  { type: 'goomba' as const, x: 62 * TILE, y: 10 * TILE - 44 },
-  { type: 'goomba' as const, x: 68 * TILE, y: 10 * TILE - 44 },
+export const ENEMIES: { type: 'goomba' | 'flyer' | 'turtle'; x: number; y: number }[] = [
+  { type: 'goomba', x: 10 * TILE, y: 10 * TILE - 44 },
+  { type: 'goomba', x: 22 * TILE, y: 10 * TILE - 44 },
+  { type: 'flyer',  x: 15 * TILE, y: 5 * TILE },
+  { type: 'turtle', x: 24 * TILE, y: 10 * TILE - 52 },
+  { type: 'goomba', x: 34 * TILE, y: 10 * TILE - 44 },
+  { type: 'turtle', x: 40 * TILE, y: 10 * TILE - 52 },
+  { type: 'goomba', x: 42 * TILE, y: 10 * TILE - 44 },
+  { type: 'flyer',  x: 38 * TILE, y: 4 * TILE },
+  { type: 'goomba', x: 50 * TILE, y: 10 * TILE - 44 },
+  { type: 'flyer',  x: 55 * TILE, y: 5 * TILE },
+  { type: 'turtle', x: 60 * TILE, y: 10 * TILE - 52 },
+  { type: 'goomba', x: 62 * TILE, y: 10 * TILE - 44 },
+  { type: 'goomba', x: 68 * TILE, y: 10 * TILE - 44 },
 ];
 
 export const COINS = [

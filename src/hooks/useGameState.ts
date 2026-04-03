@@ -38,21 +38,30 @@ export function createInitialState(): any {
       state: 'idle', // idle, walking, jumping, falling, firing
       lastFireTime: 0,
     },
-    enemies: ENEMY_SPAWNS.map((e, i) => ({
-      id: `enemy-${i}`,
-      type: e.type,
-      x: e.x,
-      y: e.y,
-      width: e.type === 'goomba' ? ENEMY.GOOMBA.WIDTH : ENEMY.FLYER.WIDTH,
-      height: e.type === 'goomba' ? ENEMY.GOOMBA.HEIGHT : ENEMY.FLYER.HEIGHT,
-      vx: e.type === 'goomba' ? -ENEMY.GOOMBA.SPEED : ENEMY.FLYER.SPEED,
-      vy: 0,
-      alive: true,
-      defeatedAt: 0,
-      originY: e.y,
-      phase: Math.random() * Math.PI * 2, // for flyer bob
-      zone: 'overworld',
-    })),
+    enemies: ENEMY_SPAWNS.map((e, i) => {
+      const dims = e.type === 'turtle' ? ENEMY.TURTLE
+        : e.type === 'goomba' ? ENEMY.GOOMBA : ENEMY.FLYER;
+      const spd = e.type === 'turtle' ? -ENEMY.TURTLE.SPEED
+        : e.type === 'goomba' ? -ENEMY.GOOMBA.SPEED : ENEMY.FLYER.SPEED;
+      return {
+        id: `enemy-${i}`,
+        type: e.type,
+        x: e.x,
+        y: e.y,
+        width: dims.WIDTH,
+        height: dims.HEIGHT,
+        vx: spd,
+        vy: 0,
+        alive: true,
+        defeatedAt: 0,
+        originY: e.y,
+        phase: Math.random() * Math.PI * 2, // for flyer bob
+        zone: 'overworld',
+        // Turtle-specific
+        shellState: null as string | null, // null | 'idle' | 'sliding'
+        shellRebounds: 0,
+      };
+    }),
     coins: COIN_SPAWNS.map((c, i) => ({
       id: `coin-${i}`,
       x: c.x,
@@ -429,8 +438,16 @@ function updateProjectiles(s: any, now: number, zone = 'overworld'): void {
     for (const enemy of s.enemies) {
       if (!enemy.alive) continue;
       if (aabbOverlap(proj, enemy)) {
-        enemy.alive = false;
-        enemy.defeatedAt = now;
+        if (enemy.type === 'turtle' && !enemy.shellState) {
+          // Fireball converts walking turtle to idle shell
+          enemy.shellState = 'idle';
+          enemy.vx = 0;
+          enemy.height = ENEMY.TURTLE.SHELL_HEIGHT;
+          enemy.y += ENEMY.TURTLE.HEIGHT - ENEMY.TURTLE.SHELL_HEIGHT;
+        } else {
+          enemy.alive = false;
+          enemy.defeatedAt = now;
+        }
         s.score += 200;
         s.popups.push({ id: `pop-${now}-${enemy.id}`, x: enemy.x, y: enemy.y - 20, text: '200', createdAt: now });
         return false;
@@ -483,6 +500,125 @@ function updateEnemies(s: any, now: number, zone = 'overworld'): void {
       } else {
         enemy.vx = -enemy.vx;
       }
+    } else if (enemy.type === 'turtle') {
+      if (!enemy.shellState) {
+        // Walking patrol — same as goomba
+        enemy.x += enemy.vx;
+
+        // Gravity
+        enemy.vy = Math.min((enemy.vy || 0) + GRAVITY, MAX_FALL_SPEED);
+        enemy.y += enemy.vy;
+
+        // Tile collisions
+        const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
+        const tiles = getSolidTilesInRect(rect, zone);
+        for (const tile of tiles) {
+          const key = `${tile.row}-${tile.col}`;
+          if (s.brokenBricks[key]) continue;
+          const pen = aabbPenetration(rect, tile);
+          if (pen) {
+            const side = collisionSide(rect, tile, pen);
+            if (side === 'left' || side === 'right') {
+              enemy.vx = -enemy.vx;
+              enemy.x += enemy.vx;
+            } else if (side === 'top') {
+              enemy.y = tile.y - enemy.height;
+              enemy.vy = 0;
+            }
+          }
+        }
+
+        // Edge detection
+        const checkX = enemy.vx > 0 ? enemy.x + enemy.width + 2 : enemy.x - 2;
+        const checkY = enemy.y + enemy.height + 4;
+        const col = Math.floor(checkX / TILE);
+        const row = Math.floor(checkY / TILE);
+        const zCols = zone === 'underground' ? UNDERGROUND_COLS : LEVEL_COLS;
+        const zRows = zone === 'underground' ? UNDERGROUND_ROWS : LEVEL_ROWS;
+        const zMap = zone === 'underground' ? UNDERGROUND_MAP : MAP;
+        if (col >= 0 && col < zCols && row >= 0 && row < zRows) {
+          const aheadTile = zMap[row][col];
+          const aheadKey = `${row}-${col}`;
+          if (!isSolidTile(aheadTile) || s.brokenBricks[aheadKey]) {
+            enemy.vx = -enemy.vx;
+          }
+        } else {
+          enemy.vx = -enemy.vx;
+        }
+      } else if (enemy.shellState === 'idle') {
+        // Shell sitting still — apply gravity only
+        enemy.vy = Math.min((enemy.vy || 0) + GRAVITY, MAX_FALL_SPEED);
+        enemy.y += enemy.vy;
+        const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
+        const tiles = getSolidTilesInRect(rect, zone);
+        for (const tile of tiles) {
+          const key = `${tile.row}-${tile.col}`;
+          if (s.brokenBricks[key]) continue;
+          const pen = aabbPenetration(rect, tile);
+          if (pen) {
+            const side = collisionSide(rect, tile, pen);
+            if (side === 'top') {
+              enemy.y = tile.y - enemy.height;
+              enemy.vy = 0;
+            }
+          }
+        }
+      } else if (enemy.shellState === 'sliding') {
+        // Shell sliding fast — rebounds off walls up to MAX_REBOUNDS
+        enemy.x += enemy.vx;
+
+        // Gravity
+        enemy.vy = Math.min((enemy.vy || 0) + GRAVITY, MAX_FALL_SPEED);
+        enemy.y += enemy.vy;
+
+        const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
+        const tiles = getSolidTilesInRect(rect, zone);
+        for (const tile of tiles) {
+          const key = `${tile.row}-${tile.col}`;
+          if (s.brokenBricks[key]) continue;
+          const pen = aabbPenetration(rect, tile);
+          if (pen) {
+            const side = collisionSide(rect, tile, pen);
+            if (side === 'left' || side === 'right') {
+              enemy.vx = -enemy.vx;
+              enemy.x += enemy.vx;
+              enemy.shellRebounds += 1;
+              if (enemy.shellRebounds >= ENEMY.TURTLE.MAX_REBOUNDS) {
+                enemy.alive = false;
+                enemy.defeatedAt = now;
+                s.score += 100;
+                s.popups.push({ id: `pop-${now}-${enemy.id}`, x: enemy.x, y: enemy.y - 20, text: '100', createdAt: now });
+              }
+            } else if (side === 'top') {
+              enemy.y = tile.y - enemy.height;
+              enemy.vy = 0;
+            }
+          }
+        }
+
+        // Level edge rebound
+        const eLevelW = zone === 'underground' ? UNDERGROUND_W : LEVEL_W;
+        if (enemy.x < 0 || enemy.x + enemy.width > eLevelW) {
+          enemy.vx = -enemy.vx;
+          enemy.shellRebounds += 1;
+          if (enemy.shellRebounds >= ENEMY.TURTLE.MAX_REBOUNDS) {
+            enemy.alive = false;
+            enemy.defeatedAt = now;
+          }
+        }
+
+        // Sliding shell kills other enemies it hits
+        for (const other of s.enemies) {
+          if (other === enemy || !other.alive) continue;
+          if ((other.zone || 'overworld') !== zone) continue;
+          if (aabbOverlap(rect, other)) {
+            other.alive = false;
+            other.defeatedAt = now;
+            s.score += 100;
+            s.popups.push({ id: `pop-${now}-${other.id}`, x: other.x, y: other.y - 20, text: '100', createdAt: now });
+          }
+        }
+      }
     } else if (enemy.type === 'flyer') {
       // Flyer: horizontal patrol + vertical bob
       enemy.x += enemy.vx;
@@ -533,6 +669,45 @@ function checkPlayerEnemyCollisions(s: any, now: number): void {
     if (!pen) continue;
     const side = collisionSide(p, enemy, pen);
 
+    // ── Turtle-specific collision logic ──
+    if (enemy.type === 'turtle') {
+      if (side === 'top' && p.vy > 0) {
+        p.vy = PLAYER.JUMP_FORCE * 0.6; // bounce
+
+        if (!enemy.shellState) {
+          // Stomp walking turtle → becomes sliding shell
+          enemy.shellState = 'sliding';
+          enemy.shellRebounds = 0;
+          enemy.height = ENEMY.TURTLE.SHELL_HEIGHT;
+          enemy.y += ENEMY.TURTLE.HEIGHT - ENEMY.TURTLE.SHELL_HEIGHT;
+          // Kick in direction player is facing
+          enemy.vx = p.facing * ENEMY.TURTLE.SHELL_SPEED;
+          s.score += 100;
+          s.popups.push({ id: `pop-${now}-${enemy.id}-stomp`, x: enemy.x, y: enemy.y - 20, text: '100', createdAt: now });
+          p.invincibleUntil = Math.max(p.invincibleUntil, now + 200);
+        } else if (enemy.shellState === 'sliding') {
+          // Stomp a sliding shell → destroy it
+          enemy.alive = false;
+          enemy.defeatedAt = now;
+          s.score += 100;
+          s.popups.push({ id: `pop-${now}-${enemy.id}-kill`, x: enemy.x, y: enemy.y - 20, text: '100', createdAt: now });
+        }
+      } else {
+        // Side collision with walking turtle or sliding shell → damage player
+        if (p.big) {
+          p.big = false;
+          p.height = PLAYER.HEIGHT;
+          p.y += PLAYER.BIG_HEIGHT - PLAYER.HEIGHT;
+          p.invincibleUntil = now + 1500;
+        } else {
+          handlePlayerDeath(s);
+          return;
+        }
+      }
+      continue;
+    }
+
+    // ── Standard enemy collision (goomba, flyer) ──
     if (side === 'top' && p.vy > 0) {
       // Stomp the enemy
       enemy.alive = false;
@@ -845,21 +1020,29 @@ function updateWarpSequence(s: any, now: number): void {
           collectedAt: 0,
         }));
         // Spawn underground enemies
-        const ugEnemies = UNDERGROUND_ENEMIES.map((e: any, i: number) => ({
-          id: `ug-enemy-${i}`,
-          type: e.type,
-          x: e.x,
-          y: e.y,
-          width: e.type === 'goomba' ? ENEMY.GOOMBA.WIDTH : ENEMY.FLYER.WIDTH,
-          height: e.type === 'goomba' ? ENEMY.GOOMBA.HEIGHT : ENEMY.FLYER.HEIGHT,
-          vx: e.type === 'goomba' ? -ENEMY.GOOMBA.SPEED : ENEMY.FLYER.SPEED,
-          vy: 0,
-          alive: true,
-          defeatedAt: 0,
-          originY: e.y,
-          phase: Math.random() * Math.PI * 2,
-          zone: 'underground',
-        }));
+        const ugEnemies = UNDERGROUND_ENEMIES.map((e: any, i: number) => {
+          const dims = e.type === 'turtle' ? ENEMY.TURTLE
+            : e.type === 'goomba' ? ENEMY.GOOMBA : ENEMY.FLYER;
+          const spd = e.type === 'turtle' ? -ENEMY.TURTLE.SPEED
+            : e.type === 'goomba' ? -ENEMY.GOOMBA.SPEED : ENEMY.FLYER.SPEED;
+          return {
+            id: `ug-enemy-${i}`,
+            type: e.type,
+            x: e.x,
+            y: e.y,
+            width: dims.WIDTH,
+            height: dims.HEIGHT,
+            vx: spd,
+            vy: 0,
+            alive: true,
+            defeatedAt: 0,
+            originY: e.y,
+            phase: Math.random() * Math.PI * 2,
+            zone: 'underground',
+            shellState: null as string | null,
+            shellRebounds: 0,
+          };
+        });
         s.enemies.push(...ugEnemies);
       }
 

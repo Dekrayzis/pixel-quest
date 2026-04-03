@@ -47,6 +47,7 @@ Navigate through the level, collect coins, defeat enemies, and reach the flag po
 |-------|----------|
 | **Goomba** | Walks back and forth on the ground. Defeat by jumping on top or with a fireball |
 | **Flyer** | Bobs up and down in the air. Defeat by jumping on top or with a fireball |
+| **Turtle** | Patrols the ground. Jump on it to turn it into a fast-sliding shell. The shell rebounds off walls up to 3 times and destroys any enemies it hits. A sliding shell damages the player on contact. Jump on the sliding shell to destroy it. Fireballs also convert turtles into shells |
 
 ### Warp Pipes
 Certain pipes in the level are warp pipes. Stand on top of them and press **Down** to enter. You'll be transported to a secret underground area with bonus coins and enemies. Find the exit pipe in the underground to return to the overworld further ahead in the level.

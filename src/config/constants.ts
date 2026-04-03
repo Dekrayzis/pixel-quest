@@ -48,6 +48,14 @@ export const ENEMY = {
     AMPLITUDE: 60, // vertical bob range
     FREQUENCY: 0.03, // bob speed
   },
+  TURTLE: {
+    WIDTH: 40,
+    HEIGHT: 52,
+    SHELL_HEIGHT: 32,
+    SPEED: 1.0,
+    SHELL_SPEED: 8,
+    MAX_REBOUNDS: 3,
+  },
 } as const;
 
 // Collectibles

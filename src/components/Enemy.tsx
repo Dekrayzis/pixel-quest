@@ -2,12 +2,15 @@ import React from 'react';
 import '../styles/enemy.scss';
 
 function Enemy({ enemy, now }: { enemy: any; now: number }): React.ReactElement | null {
-  const { type, x, y, width, height, vx, alive, defeatedAt } = enemy;
+  const { type, x, y, width, height, vx, alive, defeatedAt, shellState } = enemy;
   const isDefeated = !alive;
+  const isShell = type === 'turtle' && shellState === 'idle';
+  const isShellMoving = type === 'turtle' && shellState === 'sliding';
 
   const classNames = [
     'enemy',
-    `enemy--${type}`,
+    isShell || isShellMoving ? 'enemy--shell' : `enemy--${type}`,
+    isShellMoving ? 'enemy--shell-moving' : '',
     isDefeated ? 'enemy--defeated' : '',
     vx < 0 ? 'enemy--facing-left' : '',
   ].filter(Boolean).join(' ');
@@ -34,6 +37,14 @@ function Enemy({ enemy, now }: { enemy: any; now: number }): React.ReactElement 
             <div className="enemy__eyes" />
             <div className="enemy__wing enemy__wing--left" />
             <div className="enemy__wing enemy__wing--right" />
+          </>
+        )}
+        {type === 'turtle' && (
+          <>
+            <div className="enemy__shell" />
+            <div className="enemy__turtle-head" />
+            <div className="enemy__turtle-eye" />
+            <div className="enemy__turtle-feet" />
           </>
         )}
       </div>
