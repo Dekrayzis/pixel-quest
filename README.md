@@ -126,4 +126,5 @@ The game automatically scales down to fit smaller screens while maintaining the 
 ![Gameplay screenshot showing platforming and enemies](./screenshots/gameplay-3.png)
 ![Gameplay screenshot showing coin collection](./screenshots/gameplay-2.png)
 ![Gameplay screenshot showing fireball combat](./screenshots/gameplay-5.png)
-![Gameplay screenshot showing flag pole win sequence](./screenshots/gameplay-4.png)
+![Gameplay screenshot showing underground area](./screenshots/gameplay-6.png)
+
