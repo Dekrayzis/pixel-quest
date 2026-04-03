@@ -502,33 +502,26 @@ function updateEnemies(s: any, now: number, zone = 'overworld'): void {
       }
     } else if (enemy.type === 'turtle') {
       if (!enemy.shellState) {
-        // Walking patrol — same as goomba
+        // Walking patrol — same pattern as goomba (no gravity, stays on spawn Y)
         enemy.x += enemy.vx;
 
-        // Gravity
-        enemy.vy = Math.min((enemy.vy || 0) + GRAVITY, MAX_FALL_SPEED);
-        enemy.y += enemy.vy;
-
-        // Tile collisions
-        const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
-        const tiles = getSolidTilesInRect(rect, zone);
-        for (const tile of tiles) {
+        // Tile collisions — horizontal only (same as goomba)
+        const tRect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
+        const tTiles = getSolidTilesInRect(tRect, zone);
+        for (const tile of tTiles) {
           const key = `${tile.row}-${tile.col}`;
           if (s.brokenBricks[key]) continue;
-          const pen = aabbPenetration(rect, tile);
+          const pen = aabbPenetration(tRect, tile);
           if (pen) {
-            const side = collisionSide(rect, tile, pen);
+            const side = collisionSide(tRect, tile, pen);
             if (side === 'left' || side === 'right') {
               enemy.vx = -enemy.vx;
               enemy.x += enemy.vx;
-            } else if (side === 'top') {
-              enemy.y = tile.y - enemy.height;
-              enemy.vy = 0;
             }
           }
         }
 
-        // Edge detection
+        // Edge detection: check if there's ground ahead
         const checkX = enemy.vx > 0 ? enemy.x + enemy.width + 2 : enemy.x - 2;
         const checkY = enemy.y + enemy.height + 4;
         const col = Math.floor(checkX / TILE);

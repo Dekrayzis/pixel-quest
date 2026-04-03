@@ -61,6 +61,7 @@ export default function useInput(): UseInputReturn {
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      if (e.repeat) return; // Ignore OS key-repeat events
       if (isAction(e.key, 'LEFT'))  keys.current.left = true;
       if (isAction(e.key, 'RIGHT')) keys.current.right = true;
       if (isAction(e.key, 'JUMP')) {
