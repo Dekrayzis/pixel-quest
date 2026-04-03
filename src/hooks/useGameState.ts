@@ -37,6 +37,7 @@ export function createInitialState(): any {
       growingUntil: 0,
       state: 'idle', // idle, walking, jumping, falling, firing
       lastFireTime: 0,
+      jumpStartTime: 0,
     },
     enemies: ENEMY_SPAWNS.map((e, i) => {
       const dims = e.type === 'turtle' ? ENEMY.TURTLE
@@ -151,14 +152,19 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   }
 
   // Jump — ground jump + double jump in air
-  if (consumeJustPressed('jump')) {
+  const jumpPressed = consumeJustPressed('jump');
+  if (jumpPressed) {
+    console.log(`[JUMP] onGround=${p.onGround} vy=${p.vy.toFixed(2)} doubleJumpUsed=${p.doubleJumpUsed} timeSinceGroundJump=${now - (p.jumpStartTime || 0)}`);
     if (p.onGround) {
       p.vy = PLAYER.JUMP_FORCE;
       p.onGround = false;
       p.doubleJumpUsed = false;
-    } else if (!p.doubleJumpUsed) {
+      p.jumpStartTime = now;
+      console.log(`[JUMP] → GROUND JUMP vy=${p.vy}`);
+    } else if (!p.doubleJumpUsed && now - (p.jumpStartTime || 0) > 150) {
       p.vy = PLAYER.DOUBLE_JUMP_FORCE;
       p.doubleJumpUsed = true;
+      console.log(`[JUMP] → DOUBLE JUMP vy=${p.vy}`);
     }
   }
 
@@ -302,13 +308,13 @@ function resolvePlayerTileCollisionsY(s: any, zone = 'overworld'): void {
     if (!pen) continue;
 
     const side = collisionSide(p, tile, pen);
-    if (side === 'top') {
-      // Landing on top of a tile
+    if (side === 'top' && p.vy >= 0) {
+      // Landing on top of a tile (only when falling or stationary, not when jumping up)
       p.y = tile.y - p.height;
       p.vy = 0;
       p.onGround = true;
-    } else if (side === 'bottom') {
-      // Hit head on tile from below
+    } else if (side === 'bottom' && p.vy < 0) {
+      // Hit head on tile from below (only when moving upward)
       p.y = tile.y + tile.height;
       p.vy = 0;
       handleBlockHitFromBelow(s, tile, key);
@@ -564,47 +570,66 @@ function updateEnemies(s: any, now: number, zone = 'overworld'): void {
         enemy.vy = Math.min((enemy.vy || 0) + GRAVITY, MAX_FALL_SPEED);
         enemy.y += enemy.vy;
 
-        const rect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
-        const tiles = getSolidTilesInRect(rect, zone);
-        for (const tile of tiles) {
+        // Resolve ground collisions first (top-side only)
+        const sRect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
+        const sTiles = getSolidTilesInRect(sRect, zone);
+        for (const tile of sTiles) {
           const key = `${tile.row}-${tile.col}`;
           if (s.brokenBricks[key]) continue;
-          const pen = aabbPenetration(rect, tile);
+          const pen = aabbPenetration({ x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }, tile);
           if (pen) {
-            const side = collisionSide(rect, tile, pen);
-            if (side === 'left' || side === 'right') {
-              enemy.vx = -enemy.vx;
-              enemy.x += enemy.vx;
-              enemy.shellRebounds += 1;
-              if (enemy.shellRebounds >= ENEMY.TURTLE.MAX_REBOUNDS) {
-                enemy.alive = false;
-                enemy.defeatedAt = now;
-                s.score += 100;
-                s.popups.push({ id: `pop-${now}-${enemy.id}`, x: enemy.x, y: enemy.y - 20, text: '100', createdAt: now });
-              }
-            } else if (side === 'top') {
+            const side = collisionSide({ x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }, tile, pen);
+            if (side === 'top') {
               enemy.y = tile.y - enemy.height;
               enemy.vy = 0;
             }
           }
         }
 
-        // Level edge rebound
-        const eLevelW = zone === 'underground' ? UNDERGROUND_W : LEVEL_W;
-        if (enemy.x < 0 || enemy.x + enemy.width > eLevelW) {
-          enemy.vx = -enemy.vx;
-          enemy.shellRebounds += 1;
-          if (enemy.shellRebounds >= ENEMY.TURTLE.MAX_REBOUNDS) {
-            enemy.alive = false;
-            enemy.defeatedAt = now;
+        // Now check wall collisions — only count ONE rebound per frame
+        let reboundedThisFrame = false;
+        const wTiles = getSolidTilesInRect({ x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }, zone);
+        for (const tile of wTiles) {
+          if (reboundedThisFrame) break;
+          const key = `${tile.row}-${tile.col}`;
+          if (s.brokenBricks[key]) continue;
+          const pen = aabbPenetration({ x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }, tile);
+          if (pen) {
+            const side = collisionSide({ x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height }, tile, pen);
+            if (side === 'left' || side === 'right') {
+              enemy.vx = -enemy.vx;
+              enemy.x += enemy.vx;
+              enemy.shellRebounds += 1;
+              reboundedThisFrame = true;
+              if (enemy.shellRebounds >= ENEMY.TURTLE.MAX_REBOUNDS) {
+                enemy.alive = false;
+                enemy.defeatedAt = now;
+                s.score += 100;
+                s.popups.push({ id: `pop-${now}-${enemy.id}`, x: enemy.x, y: enemy.y - 20, text: '100', createdAt: now });
+              }
+            }
+          }
+        }
+
+        // Level edge rebound (only if no tile rebound this frame)
+        if (!reboundedThisFrame) {
+          const eLevelW = zone === 'underground' ? UNDERGROUND_W : LEVEL_W;
+          if (enemy.x < 0 || enemy.x + enemy.width > eLevelW) {
+            enemy.vx = -enemy.vx;
+            enemy.shellRebounds += 1;
+            if (enemy.shellRebounds >= ENEMY.TURTLE.MAX_REBOUNDS) {
+              enemy.alive = false;
+              enemy.defeatedAt = now;
+            }
           }
         }
 
         // Sliding shell kills other enemies it hits
+        const killRect = { x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height };
         for (const other of s.enemies) {
           if (other === enemy || !other.alive) continue;
           if ((other.zone || 'overworld') !== zone) continue;
-          if (aabbOverlap(rect, other)) {
+          if (aabbOverlap(killRect, other)) {
             other.alive = false;
             other.defeatedAt = now;
             s.score += 100;
