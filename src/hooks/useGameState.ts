@@ -152,19 +152,15 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   }
 
   // Jump — ground jump + double jump in air
-  const jumpPressed = consumeJustPressed('jump');
-  if (jumpPressed) {
-    console.log(`[JUMP] onGround=${p.onGround} vy=${p.vy.toFixed(2)} doubleJumpUsed=${p.doubleJumpUsed} timeSinceGroundJump=${now - (p.jumpStartTime || 0)}`);
+  if (consumeJustPressed('jump')) {
     if (p.onGround) {
       p.vy = PLAYER.JUMP_FORCE;
       p.onGround = false;
       p.doubleJumpUsed = false;
       p.jumpStartTime = now;
-      console.log(`[JUMP] → GROUND JUMP vy=${p.vy}`);
     } else if (!p.doubleJumpUsed && now - (p.jumpStartTime || 0) > 150) {
       p.vy = PLAYER.DOUBLE_JUMP_FORCE;
       p.doubleJumpUsed = true;
-      console.log(`[JUMP] → DOUBLE JUMP vy=${p.vy}`);
     }
   }
 
@@ -318,6 +314,32 @@ function resolvePlayerTileCollisionsY(s: any, zone = 'overworld'): void {
       p.y = tile.y + tile.height;
       p.vy = 0;
       handleBlockHitFromBelow(s, tile, key);
+    }
+  }
+
+  // Extra ground probe: check 2px below feet for a solid tile.
+  // This ensures onGround is reliably true even when perfectly flush with a tile.
+  if (!p.onGround && p.vy >= 0) {
+    const probeY = p.y + p.height + 2;
+    const leftCol = Math.floor(p.x / TILE);
+    const rightCol = Math.floor((p.x + p.width - 1) / TILE);
+    const row = Math.floor(probeY / TILE);
+    const { map, cols, rows } = zone === 'underground'
+      ? { map: UNDERGROUND_MAP, cols: UNDERGROUND_COLS, rows: UNDERGROUND_ROWS }
+      : { map: MAP, cols: LEVEL_COLS, rows: LEVEL_ROWS };
+    if (row >= 0 && row < rows) {
+      for (let c = leftCol; c <= rightCol; c++) {
+        if (c >= 0 && c < cols && isSolidTile(map[row][c]) && !s.brokenBricks[`${row}-${c}`]) {
+          // Feet are within 2px of solid ground
+          const tileTop = row * TILE;
+          if (Math.abs((p.y + p.height) - tileTop) <= 2) {
+            p.y = tileTop - p.height;
+            p.vy = 0;
+            p.onGround = true;
+            break;
+          }
+        }
+      }
     }
   }
 }
