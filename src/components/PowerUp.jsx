@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/powerup.scss';
 
-const PowerUp = React.memo(function PowerUp({ powerup, now }) {
+function PowerUp({ powerup, now }) {
   const { x, y, width, height, active, collected, emergedAt, puType } = powerup;
 
   // Remove after collected animation
@@ -40,6 +40,6 @@ const PowerUp = React.memo(function PowerUp({ powerup, now }) {
       )}
     </div>
   );
-});
+}
 
 export default PowerUp;

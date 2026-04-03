@@ -8,7 +8,7 @@ import '../styles/block.scss';
  * Renders all static tiles (ground, bricks, item blocks, solid blocks).
  * Broken bricks and used blocks are tracked via state props.
  */
-const Platform = React.memo(function Platform({
+function Platform({
   brokenBricks,
   usedBlocks,
   bumpedBlocks,
@@ -82,7 +82,11 @@ const Platform = React.memo(function Platform({
       }
 
       if (isBumped) {
-        className += ' tile--item-bumped';
+        if (type === 2) {
+          className += ' tile--brick-bumped';
+        } else {
+          className += ' tile--item-bumped';
+        }
       }
 
       tiles.push(
@@ -100,6 +104,6 @@ const Platform = React.memo(function Platform({
   }
 
   return <>{tiles}</>;
-});
+}
 
 export default Platform;

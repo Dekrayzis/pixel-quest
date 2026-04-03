@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/player.scss';
 
-const Player = React.memo(function Player({ player, now }) {
+function Player({ player, now }) {
   const {
     x, y, width, height, facing, big, state,
     invincibleUntil, growingUntil, firePowerUntil,
@@ -49,6 +49,6 @@ const Player = React.memo(function Player({ player, now }) {
       </div>
     </div>
   );
-});
+}
 
 export default Player;

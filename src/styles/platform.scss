@@ -97,6 +97,10 @@
     animation: block-bump 0.2s ease-out;
   }
 
+  &--brick-bumped {
+    animation: block-bump 0.2s ease-out;
+  }
+
   // ── Fire flower item block (orange tint) ────────
   &--item-fire {
     background: #e85d00;
