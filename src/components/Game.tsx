@@ -214,6 +214,7 @@ export default function Game(): React.ReactElement {
           usedBlocks={state.usedBlocks}
           bumpedBlocks={state.bumpedBlocks}
           breakingBricks={state.breakingBricks}
+          sprungPads={state.sprungPads}
           cameraX={cameraX}
           currentZone={state.currentZone}
         />

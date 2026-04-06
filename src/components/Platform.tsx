@@ -9,6 +9,7 @@ interface PlatformProps {
   usedBlocks: Record<string, boolean>;
   bumpedBlocks: Record<string, number>;
   breakingBricks: Record<string, number>;
+  sprungPads: Record<string, number>;
   cameraX: number;
   currentZone: string;
 }
@@ -22,6 +23,7 @@ function Platform({
   usedBlocks,
   bumpedBlocks,
   breakingBricks,
+  sprungPads,
   cameraX,
   currentZone,
 }: PlatformProps): React.ReactElement {
@@ -70,7 +72,7 @@ function Platform({
         continue;
       }
 
-      const tileClassMap: Record<number, string | ((used: boolean) => string)> = {
+      const tileClassMap: Record<number, string | ((used: boolean, key: string) => string)> = {
         1: 'tile--ground',
         2: 'tile--brick',
         3: (used: boolean) => used ? 'tile--item tile--item-used' : 'tile--item',
@@ -79,12 +81,12 @@ function Platform({
         6: (used: boolean) => used ? 'tile--item tile--item-used' : 'tile--item tile--item-fire',
         7: 'tile--pipe-body',
         8: 'tile--pipe-top',
-        9: 'tile--jumppad',
+        9: (_used: boolean, k: string) => sprungPads[k] ? 'tile--jumppad tile--jumppad-sprung' : 'tile--jumppad',
       };
 
       const entry = tileClassMap[type];
       if (!entry) continue;
-      className += ` ${typeof entry === 'function' ? entry(!!isUsed) : entry}`;
+      className += ` ${typeof entry === 'function' ? entry(!!isUsed, key) : entry}`;
 
       if (isBumped) {
         className += type === 2 ? ' tile--brick-bumped' : ' tile--item-bumped';

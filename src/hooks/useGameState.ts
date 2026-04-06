@@ -3,7 +3,7 @@ import {
   GRAVITY, MAX_FALL_SPEED,
   PLAYER, PROJECTILE, ENEMY,
   COIN_VALUE, BLOCK_COIN_COUNT, LIVES_START, POWERUP_SCORE,
-  JUMP_PAD_FORCE,
+  JUMP_PAD_FORCE, JUMP_PAD_DELAY,
 } from '../config/constants';
 import { getActiveLevel } from '../data/activeLevel';
 import { aabbOverlap, aabbPenetration, collisionSide } from '../utils/collision';
@@ -112,6 +112,8 @@ export function createInitialState(): any {
     warpState: 'none' as string,
     warpStartTime: 0,
     warpPipeId: null as string | null,
+    sprungPads: {} as Record<string, number>,   // key → timestamp when pad was triggered
+    jumpPadHold: null as { key: string; col: number; row: number; triggerTime: number } | null,
   };
 }
 
@@ -179,6 +181,27 @@ export function tickGameState(s: any, inputKeys: React.MutableRefObject<GameKeys
   // Reset double jump on landing
   if (p.onGround) {
     p.doubleJumpUsed = false;
+  }
+
+  // ── Jump pad hold → launch ─────────────────────
+  if (s.jumpPadHold) {
+    const elapsed = now - s.jumpPadHold.triggerTime;
+    if (elapsed >= JUMP_PAD_DELAY) {
+      // Spring has compressed — launch!
+      p.vy = JUMP_PAD_FORCE;
+      p.onGround = false;
+      p.doubleJumpUsed = false;
+      s.jumpPadHold = null;
+    } else {
+      // Still compressing — freeze the player on the pad
+      p.vy = 0;
+      p.vx = 0;
+    }
+  }
+
+  // Clean up expired sprungPads visual state (after animation completes ~500ms)
+  for (const padKey in s.sprungPads) {
+    if (now - s.sprungPads[padKey] > 500) delete s.sprungPads[padKey];
   }
 
   // Expire fire power
@@ -318,12 +341,14 @@ function resolvePlayerTileCollisionsY(s: any, zone = 'overworld'): void {
     if (side === 'top' && p.vy >= 0) {
       // Landing on top of a tile (only when falling or stationary, not when jumping up)
       p.y = tile.y - p.height;
-      if (tile.type === 9) {
-        // Jump pad: bounce the player upward
-        p.vy = JUMP_PAD_FORCE;
-        p.onGround = false;
-        p.doubleJumpUsed = false;
-      } else {
+      if (tile.type === 9 && !s.jumpPadHold) {
+        // Jump pad: hold the player while the spring compresses
+        p.vy = 0;
+        p.onGround = true;
+        const padKey = `${tile.row}-${tile.col}`;
+        s.jumpPadHold = { key: padKey, col: tile.col, row: tile.row, triggerTime: s.now };
+        s.sprungPads[padKey] = s.now;
+      } else if (tile.type !== 9) {
         p.vy = 0;
         p.onGround = true;
       }

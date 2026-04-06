@@ -60,6 +60,7 @@ export const ENEMY = {
 
 // Jump pad
 export const JUMP_PAD_FORCE = -20; // stronger than normal jump (-14)
+export const JUMP_PAD_DELAY = 250; // ms — compress before launch
 
 // Collectibles
 export const COIN_VALUE = 100;

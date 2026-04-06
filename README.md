@@ -35,6 +35,7 @@ Navigate through the level, collect coins, defeat enemies, and reach the flag po
 | **Multi-coin Blocks** | Dispense 5 coins on repeated hits, then shatter |
 | **Solid Blocks** | Blue indestructible blocks |
 | **Pipes** | Green pipes — some are warp pipes leading to secret areas |
+| **Jump Pads** | Red spring-loaded pads that launch the player high into the air. Landing on one triggers a compress-then-launch animation (250ms hold) before the player is sprung upward |
 
 ### Power-ups
 | Power-up | Effect |
@@ -71,6 +72,22 @@ When Mario reaches the flag pole, he grabs on and slides down with the flag. Aft
 - **SCSS** — Styling with variables, mixins, and nesting
 - **Pure CSS pixel art** — All characters, enemies, and objects are rendered with CSS (no images)
 
+## 📷 Camera System
+
+The camera handles both horizontal scrolling and vertical section transitions with different strategies for each axis.
+
+### Horizontal Tracking
+The camera centers on the player each frame and clamps to zone boundaries, preventing the viewport from showing empty space beyond the level edges.
+
+### Vertical Section Snap
+For levels that extend beyond the viewport height (12 tiles), the camera uses a snap-to-section model to hide lower rooms until discovered:
+- While the player is in the top section, the camera holds at Y=0 — floor gaps appear bottomless
+- When the player drops below the viewport boundary, the camera lerps smoothly to the lower section
+- A 2-pixel ground probe ensures reliable ground contact detection even when the player's feet are perfectly flush with a tile surface
+
+### Background Parallax
+Cloud and hill background layers translate at a fraction of the camera speed, creating depth without additional rendering layers.
+
 ## 📁 Project Structure
 
 ```
@@ -104,6 +121,79 @@ npm run build
 # Preview production build
 npm run preview
 ```
+
+## �️ Level Editor
+
+Pixel Quest includes a full visual level editor for creating and modifying game levels without hand-writing code.
+
+![Gameplay title screen](./screenshots/pixel-quest-editor.png)
+
+### Accessing the Editor
+
+The editor runs as a separate page in the same Vite project:
+
+```bash
+# Start the dev server (if not already running)
+npm run dev
+
+# Then navigate to:
+# http://localhost:5173/editor.html
+```
+
+### Editor Features
+
+| Tool | Description |
+|------|-------------|
+| **Tile Brush** | Paint any of 9 tile types: ground, bricks, ? blocks, power-up blocks, solid blocks, fire flower blocks, pipe bodies, pipe tops, and jump pads |
+| **Eraser** | Remove tiles, enemies, and coins from the grid |
+| **Enemy Tool** | Place Goombas, Flyers, or Turtles on the map |
+| **Coin Tool** | Add collectible coins to the level |
+| **Player Start** | Set Mario's spawn position (overworld only) |
+| **Flag Tool** | Place the level end flag (overworld only) |
+| **Warp Pipes** | Define entry and exit points for secret underground zones |
+
+### Multi-Zone Level Design
+
+Levels can contain multiple zones:
+- **Overworld** — The main level area (always required)
+- **Additional Zones** — Create custom underground or bonus rooms with independent dimensions
+
+Switch between zones using the zone tabs. Resize zones dynamically — tiles, enemies, and coins outside the new bounds are automatically pruned.
+
+### Creating Warp Pipes
+
+1. Select the **Warp Entry** tool and click on a pipe in the overworld
+2. Switch to the destination zone (or create a new one)
+3. Select the **Warp Exit** tool and click where the pipe should lead
+4. The editor automatically links the two points with full coordinates and emerge direction
+
+### Saving Levels
+
+The editor supports two export workflows:
+
+#### Export to TypeScript File
+Click **Export** to generate a complete TypeScript source file, or **Download** to save it directly. The exported file includes:
+- Tile maps with column headers for readability
+- Enemy spawn arrays with correct pixel positioning
+- Coin coordinates
+- Warp pipe definitions with entry/exit zones
+- Fully typed `LevelDefinition` export ready to drop into `src/data/`
+
+#### Save to Project (Hot Reload)
+Click **Save to Project** to write the level directly into the source code and trigger instant hot-reload:
+
+1. The editor generates TypeScript and POSTs it to a custom Vite plugin endpoint (`/api/save-level`)
+2. The plugin writes the file to `src/data/` and auto-regenerates the `levels.ts` registry
+3. Vite HMR picks up the changes — the game updates immediately without restart
+
+When importing an existing game level, the editor queries the API to determine the original source filename, so re-saving overwrites the correct file rather than creating duplicates.
+
+### Importing Levels
+
+- **Import from Game** — Load any existing level from the game registry for modification
+- **Load JSON** — Import previously exported level JSON files
+
+Both methods auto-populate the save filename so the round-trip (import → edit → save → playtest) takes seconds.
 
 ## 📐 Game Constants
 

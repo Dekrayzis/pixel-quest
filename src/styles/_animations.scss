@@ -141,8 +141,30 @@
   50%      { filter: brightness(1.8) saturate(0.3); }
 }
 
-// ── Jump pad pulse ─────────────────────────────────
-@keyframes jumppad-pulse {
-  0%   { transform: translateY(0); opacity: 0.8; }
-  100% { transform: translateY(-2px); opacity: 1; }
+// ── Jump pad spring (Sonic-style) ──────────────────
+@keyframes jumppad-plate {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(3px); }
+}
+
+@keyframes jumppad-base {
+  0%   { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0.8); transform-origin: bottom; }
+}
+
+// Sprung state: compress then snap tall
+@keyframes jumppad-plate-sprung {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(12px); }
+  60%  { transform: translateY(-6px); }
+  80%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes jumppad-base-sprung {
+  0%   { transform: scaleY(1); transform-origin: bottom; }
+  40%  { transform: scaleY(0.4); transform-origin: bottom; }
+  60%  { transform: scaleY(1.2); transform-origin: bottom; }
+  80%  { transform: scaleY(1.05); transform-origin: bottom; }
+  100% { transform: scaleY(1); transform-origin: bottom; }
 }
