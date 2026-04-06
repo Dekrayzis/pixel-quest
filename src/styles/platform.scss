@@ -129,6 +129,45 @@
     }
   }
 
+  // ── Jump pad ──────────────────────────────────
+  &--jumppad {
+    background: linear-gradient(180deg, #ff3030 0%, #cc2020 60%, #991515 100%);
+    @include pixel-border(#ff6060, #661010, 2px);
+    position: relative;
+
+    // Spring coil lines
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 6px;
+      right: 6px;
+      height: 60%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 4px,
+        #ffcc00 4px,
+        #ffcc00 6px
+      );
+      border-radius: 2px;
+    }
+
+    // Up arrow indicator
+    &::after {
+      content: '▲';
+      position: absolute;
+      top: 2px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      color: #ffcc00;
+      text-shadow: 0 0 4px rgba(255, 200, 0, 0.6);
+      animation: jumppad-pulse 0.6s ease-in-out infinite alternate;
+    }
+  }
+
   // ── Pipe body (green shaft) ────────────────────
   &--pipe-body {
     background: linear-gradient(90deg, #1a8a1a 0%, #2ecc2e 30%, #3de03d 50%, #2ecc2e 70%, #1a8a1a 100%);

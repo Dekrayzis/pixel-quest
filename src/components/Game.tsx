@@ -117,6 +117,7 @@ export default function Game(): React.ReactElement {
   const activeLevel = getActiveLevel();
   const currentZoneDef = activeLevel.zones[state.currentZone] ?? activeLevel.zones.overworld;
   const zoneLevelW = (currentZoneDef.map[0]?.length ?? 0) * TILE;
+  const zoneLevelH = (currentZoneDef.map.length ?? 0) * TILE;
   const cameraX = Math.max(
     0,
     Math.min(
@@ -124,6 +125,27 @@ export default function Game(): React.ReactElement {
       Math.max(0, zoneLevelW - VIEWPORT_W)
     )
   );
+  // Vertical camera: snap between "sections". While the player is within the
+  // top VIEWPORT_H pixels, keep cameraY = 0 so floor gaps look bottomless.
+  // Once the player drops into the area below, smoothly pan the camera down
+  // to reveal the lower room.
+  let targetCameraY = 0;
+  if (zoneLevelH > VIEWPORT_H) {
+    const maxCamY = zoneLevelH - VIEWPORT_H;
+    const playerCenterY = state.player.y + state.player.height / 2;
+    if (playerCenterY > VIEWPORT_H) {
+      targetCameraY = maxCamY;
+    }
+  }
+  // Smooth lerp toward target
+  const smoothCamYRef = useRef(0);
+  const lerpSpeed = 0.08; // 0 = no movement, 1 = instant snap
+  smoothCamYRef.current += (targetCameraY - smoothCamYRef.current) * lerpSpeed;
+  // Snap if close enough to avoid sub-pixel jitter
+  if (Math.abs(targetCameraY - smoothCamYRef.current) < 0.5) {
+    smoothCamYRef.current = targetCameraY;
+  }
+  const cameraY = smoothCamYRef.current;
   const isUnderground = currentZoneDef.kind === 'underground';
   const isWarping = state.warpState === 'transitioning';
 
@@ -176,11 +198,11 @@ export default function Game(): React.ReactElement {
       {/* Scrolling world container */}
       <div
         className="game-world"
-        style={{ transform: `translateX(${-cameraX}px)` }}
+        style={{ transform: `translate(${-cameraX}px, ${-cameraY}px)` }}
       >
         {/* Background decorations (parallax at 0.3x) — hidden underground */}
         {!isUnderground && (
-          <div style={{ transform: `translateX(${cameraX * 0.7}px)`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+          <div style={{ transform: `translate(${cameraX * 0.7}px, ${cameraY * 0.3}px)`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
             {bgElements.clouds}
             {bgElements.hills}
           </div>

@@ -140,3 +140,9 @@
   0%, 100% { filter: brightness(1); }
   50%      { filter: brightness(1.8) saturate(0.3); }
 }
+
+// ── Jump pad pulse ─────────────────────────────────
+@keyframes jumppad-pulse {
+  0%   { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(-2px); opacity: 1; }
+}

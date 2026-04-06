@@ -43,7 +43,7 @@ export function getTileAt(px: number, py: number, zone = 'overworld'): number {
  * Types: 1=ground, 2=brick, 3=item(coin), 4=item(powerup), 5=solid, 6=fire, 7=pipe, 8=pipe top
  */
 export function isSolidTile(type: number): boolean {
-  return type >= 1 && type <= 8;
+  return type >= 1 && type <= 9;
 }
 
 /**

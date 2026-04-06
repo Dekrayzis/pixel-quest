@@ -43,12 +43,16 @@ export interface LevelDefinition {
 
 import { LEVEL1 } from './level1';
 import { LEVEL2 } from './level2';
+import { LEVEL3 } from './level3';
+import { LEVEL_1_4 } from './level4';
 
-export const LEVEL_ORDER = [LEVEL1.id, LEVEL2.id];
+export const LEVEL_ORDER = [LEVEL1.id, LEVEL2.id, LEVEL3.id, LEVEL_1_4.id];
 
 export const LEVELS: Record<string, LevelDefinition> = {
   [LEVEL1.id]: LEVEL1,
   [LEVEL2.id]: LEVEL2,
+  [LEVEL3.id]: LEVEL3,
+  [LEVEL_1_4.id]: LEVEL_1_4,
 };
 
 export function getLevel(id: string): LevelDefinition {

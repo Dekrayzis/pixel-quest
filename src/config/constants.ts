@@ -58,6 +58,9 @@ export const ENEMY = {
   },
 } as const;
 
+// Jump pad
+export const JUMP_PAD_FORCE = -20; // stronger than normal jump (-14)
+
 // Collectibles
 export const COIN_VALUE = 100;
 export const BLOCK_COIN_COUNT = 5; // coins per multi-coin block

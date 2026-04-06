@@ -3,6 +3,7 @@ import {
   GRAVITY, MAX_FALL_SPEED,
   PLAYER, PROJECTILE, ENEMY,
   COIN_VALUE, BLOCK_COIN_COUNT, LIVES_START, POWERUP_SCORE,
+  JUMP_PAD_FORCE,
 } from '../config/constants';
 import { getActiveLevel } from '../data/activeLevel';
 import { aabbOverlap, aabbPenetration, collisionSide } from '../utils/collision';
@@ -317,8 +318,15 @@ function resolvePlayerTileCollisionsY(s: any, zone = 'overworld'): void {
     if (side === 'top' && p.vy >= 0) {
       // Landing on top of a tile (only when falling or stationary, not when jumping up)
       p.y = tile.y - p.height;
-      p.vy = 0;
-      p.onGround = true;
+      if (tile.type === 9) {
+        // Jump pad: bounce the player upward
+        p.vy = JUMP_PAD_FORCE;
+        p.onGround = false;
+        p.doubleJumpUsed = false;
+      } else {
+        p.vy = 0;
+        p.onGround = true;
+      }
     } else if (side === 'bottom' && p.vy < 0) {
       // Hit head on tile from below (only when moving upward)
       p.y = tile.y + tile.height;

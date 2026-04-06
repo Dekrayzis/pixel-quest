@@ -79,6 +79,7 @@ function Platform({
         6: (used: boolean) => used ? 'tile--item tile--item-used' : 'tile--item tile--item-fire',
         7: 'tile--pipe-body',
         8: 'tile--pipe-top',
+        9: 'tile--jumppad',
       };
 
       const entry = tileClassMap[type];
