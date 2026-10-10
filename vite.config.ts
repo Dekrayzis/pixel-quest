@@ -63,6 +63,9 @@ function regenerateRegistry(dataDir: string, levels: { file: string; exportName:
 }
 
 export default defineConfig({
+  // Published on GitHub Pages under the repo's name: the deploy workflow
+  // sets BASE_PATH (e.g. "/pixel-quest/"). Locally it stays at the root.
+  base: process.env.BASE_PATH ?? "/",
   plugins: [
     react(),
     {
