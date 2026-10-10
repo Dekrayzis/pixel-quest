@@ -15,7 +15,7 @@ import {
 import { GridCanvas } from './GridCanvas';
 import { exportLevelToTS, downloadFile } from './exportLevel';
 import { importLevelFromGame, getAvailableLevels } from './importLevel';
-import { saveToProject, fetchRegisteredLevels } from './saveToProject';
+import { saveToProject, fetchRegisteredLevels, CAN_SAVE_TO_PROJECT } from './saveToProject';
 
 export function LevelEditor(): React.ReactElement {
   const [level, setLevel] = useState<EditorLevel>(createDefaultLevel);
@@ -315,20 +315,27 @@ export function LevelEditor(): React.ReactElement {
           <button onClick={handleExport} className="btn btn--primary">Export .ts</button>
           <button onClick={handleDownload} className="btn btn--accent">Download .ts</button>
           <span className="save-divider">|</span>
-          <input
-            className="save-filename"
-            type="text"
-            placeholder="filename.ts"
-            value={saveFilename}
-            onChange={(e) => setSaveFilename(e.target.value)}
-          />
-          <button
-            onClick={handleSaveToProject}
-            className={`btn btn--save ${saveStatus === 'saved' ? 'btn--saved' : saveStatus === 'saving' ? 'btn--saving' : ''}`}
-            disabled={saveStatus === 'saving'}
-          >
-            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save to Project'}
-          </button>
+          {CAN_SAVE_TO_PROJECT ? (
+            <>
+              <input
+                className="save-filename"
+                type="text"
+                placeholder="filename.ts"
+                aria-label="Project filename"
+                value={saveFilename}
+                onChange={(e) => setSaveFilename(e.target.value)}
+              />
+              <button
+                onClick={handleSaveToProject}
+                className={`btn btn--save ${saveStatus === 'saved' ? 'btn--saved' : saveStatus === 'saving' ? 'btn--saving' : ''}`}
+                disabled={saveStatus === 'saving'}
+              >
+                {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save to Project'}
+              </button>
+            </>
+          ) : (
+            <p className="save-note">Saving to the project only works when running the game locally. Use Save JSON or Download .ts instead.</p>
+          )}
         </div>
       </header>
 
